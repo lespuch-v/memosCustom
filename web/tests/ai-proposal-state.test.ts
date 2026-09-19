@@ -13,6 +13,7 @@ describe("AI proposal state", () => {
       content: "reply",
       proposals: [first, second],
       contextMemoCount: 0,
+      contextCommentCount: 0,
       contextEstimatedTokens: 0,
       truncated: false,
     };

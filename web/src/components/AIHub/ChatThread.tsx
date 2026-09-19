@@ -1,19 +1,60 @@
 import { SparklesIcon, TriangleAlertIcon, UserRoundIcon } from "lucide-react";
-import type { HubMessage } from "@/hooks/useAiChat";
+import { type ChatProgress, type HubMessage, phasePhraseKey } from "@/hooks/useAiChat";
 import { cn } from "@/lib/utils";
-import { useTranslate } from "@/utils/i18n";
+import { type Translations, useTranslate } from "@/utils/i18n";
 import ProposalCard from "./ProposalCard";
 
 interface ChatThreadProps {
   messages: HubMessage[];
   isSending: boolean;
+  /** What the running turn is doing, for the progress indicator. */
+  progress: ChatProgress;
   /** Retires one proposal from a message after the user acts on it. */
   onProposalResolved: (messageId: string, proposalId: string) => void;
 }
 
+/**
+ * Describes what one reply actually read. Comments are reported separately
+ * because they are opt-in: a turn that included them must not look identical to
+ * one that did not.
+ */
+export const describeContextReceipt = (
+  memoCount: number,
+  commentCount: number,
+  translate: (key: Translations, params?: Record<string, unknown>) => string,
+): string => {
+  const notes = memoCount === 0 ? translate("ai.receipt-no-context") : translate("ai.receipt-context", { count: memoCount });
+  if (commentCount === 0) return notes;
+  return `${notes} · ${translate("ai.receipt-comments", { count: commentCount })}`;
+};
+
+/**
+ * The second line of the progress indicator: the real numbers behind the wait,
+ * or undefined when the phase has nothing concrete to report. Phases that cannot
+ * know their numbers say nothing rather than showing a zero.
+ */
+export const describePhaseContext = (
+  progress: ChatProgress,
+  translate: (key: Translations, params?: Record<string, unknown>) => string,
+): string | undefined => {
+  if (progress.phase === "resolving") {
+    const notes = translate("ai.phase-resolving-context", { count: progress.memoCount });
+    if (progress.commentCount === 0) return notes;
+    return translate("ai.phase-resolving-context-comments", {
+      count: progress.memoCount,
+      comments: translate("ai.receipt-comments", { count: progress.commentCount }),
+    });
+  }
+  if (progress.phase === "asking") {
+    return translate("ai.phase-asking-context", { notes: translate("ai.receipt-context", { count: progress.memoCount }) });
+  }
+  return undefined;
+};
+
 /** Renders the conversation, including the note changes the model proposed. */
-const ChatThread = ({ messages, isSending, onProposalResolved }: ChatThreadProps) => {
+const ChatThread = ({ messages, isSending, progress, onProposalResolved }: ChatThreadProps) => {
   const t = useTranslate();
+  const phaseContext = describePhaseContext(progress, t);
 
   if (messages.length === 0 && !isSending) {
     return (
@@ -48,7 +89,7 @@ const ChatThread = ({ messages, isSending, onProposalResolved }: ChatThreadProps
             </span>
             {message.role === "assistant" && (
               <span className="text-xs text-muted-foreground/70">
-                {message.contextMemoCount === 0 ? t("ai.receipt-no-context") : t("ai.receipt-context", { count: message.contextMemoCount })}
+                {describeContextReceipt(message.contextMemoCount, message.contextCommentCount, t)}
               </span>
             )}
           </div>
@@ -79,10 +120,16 @@ const ChatThread = ({ messages, isSending, onProposalResolved }: ChatThreadProps
         </div>
       ))}
 
-      {isSending && (
-        <div className="flex items-center gap-2 ps-7 text-xs text-muted-foreground">
-          <SparklesIcon className="size-3.5 animate-pulse text-primary" strokeWidth={2} />
-          {t("ai.thinking")}
+      {isSending && progress.phase !== "idle" && (
+        <div className="flex items-start gap-2 ps-7 text-xs text-muted-foreground" role="status" aria-live="polite">
+          <SparklesIcon className="mt-0.5 size-3.5 shrink-0 animate-pulse text-primary" strokeWidth={2} />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-foreground">{t(`ai.phase-${progress.phase}-label` as Translations)}</span>
+            {/* aria-hidden: the rotating joke should not interrupt a screen reader
+                every couple of seconds. The phase label above is the real status. */}
+            <span aria-hidden="true">{t(phasePhraseKey(progress.phase, progress.tick) as Translations)}</span>
+            {phaseContext && <span className="text-muted-foreground/70">{phaseContext}</span>}
+          </div>
         </div>
       )}
     </div>

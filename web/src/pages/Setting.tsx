@@ -1,20 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import {
-  DEFAULT_SETTING_SECTION,
-  isSettingSectionKey,
-  SETTINGS_SECTIONS,
-  type SettingSectionKey,
-} from "@/components/Settings/settingSections";
+import { useEffect, useMemo, useRef } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { DEFAULT_SETTING_SECTION, SETTINGS_SECTIONS, type SettingSectionKey } from "@/components/Settings/settingSections";
 import { useInstance } from "@/contexts/InstanceContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import { User_Role } from "@/types/proto/api/v1/user_service_pb";
 
 const Setting = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const user = useCurrentUser();
   const { fetchSettings } = useInstance();
-  const [selectedSection, setSelectedSection] = useState<SettingSectionKey>(DEFAULT_SETTING_SECTION);
   const isHost = user?.role === User_Role.ADMIN;
 
   const sectionGroups = useMemo(() => {
@@ -25,16 +20,18 @@ const Setting = () => {
     };
   }, [isHost]);
 
-  const visibleSectionKeys = useMemo(() => new Set(sectionGroups.all.map((section) => section.key)), [sectionGroups.all]);
+  // The route asks for a section either as a query parameter, the way another page
+  // deep-links into one, or as the hash the sidebar links with. The request is
+  // resolved against what this visitor may see, so naming a hidden section falls
+  // back instead of reaching it. Derived rather than stored: the sidebar reads the
+  // hash with no React state in between, and two copies of this would drift.
+  const selectedSection = useMemo((): SettingSectionKey => {
+    const requested = searchParams.get("section") ?? location.hash.slice(1);
+    return sectionGroups.all.some((section) => section.key === requested) ? (requested as SettingSectionKey) : DEFAULT_SETTING_SECTION;
+  }, [location.hash, searchParams, sectionGroups.all]);
 
-  useEffect(() => {
-    const hash = location.hash.slice(1);
-    const nextSection = isSettingSectionKey(hash) && visibleSectionKeys.has(hash) ? hash : DEFAULT_SETTING_SECTION;
-    setSelectedSection(nextSection);
-  }, [location.hash, visibleSectionKeys]);
-
-  // Jump back to the top when switching sections; skip the initial hash sync so
-  // scroll restoration on back-navigation still wins.
+  // Jump back to the top when switching sections; skip the first run so scroll
+  // restoration on back-navigation still wins.
   const prevSectionRef = useRef<SettingSectionKey | null>(null);
   useEffect(() => {
     if (prevSectionRef.current && prevSectionRef.current !== selectedSection) {
@@ -42,6 +39,23 @@ const Setting = () => {
     }
     prevSectionRef.current = selectedSection;
   }, [selectedSection]);
+
+  // Publishing the query-parameter request into the hash. The sidebar reads the
+  // hash with no React state in between, so without this a deep link would show
+  // the section while the list highlighted nothing.
+  useEffect(() => {
+    if (searchParams.get("section") === null || location.hash.slice(1) === selectedSection) {
+      return;
+    }
+    // Relabelling the current history entry rather than pushing a new one: one
+    // Back press must leave settings, not step from a section to its own hash.
+    // Written directly because the route is what the sidebar reads.
+    const query = new URLSearchParams(searchParams);
+    query.delete("section");
+    const rest = query.toString();
+    const nextUrl = `${location.pathname}${rest ? `?${rest}` : ""}#${selectedSection}`;
+    window.history.replaceState(null, "", nextUrl);
+  }, [location.hash, location.pathname, searchParams, selectedSection]);
 
   useEffect(() => {
     if (!isHost) {

@@ -52,6 +52,12 @@ interface InstanceContextValue extends InstanceState {
   initialize: () => Promise<void>;
   fetchSetting: (key: InstanceSetting_Key) => Promise<void>;
   fetchSettings: (keys: InstanceSetting_Key[]) => Promise<void>;
+  /**
+   * Whether a setting has been fetched or is being fetched. Without this, a
+   * setting that has not loaded yet is indistinguishable from one that loaded
+   * empty, so a consumer cannot tell "not configured" from "not known yet".
+   */
+  hasSetting: (key: InstanceSetting_Key) => boolean;
   updateSetting: (setting: InstanceSetting) => Promise<void>;
 }
 
@@ -216,6 +222,13 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  /**
+   * The ref is marked before the request is issued, so this reads as "known or
+   * on its way". That is what a consumer wants: it should not flash an empty
+   * state during the fetch that is about to fill it.
+   */
+  const hasSetting = useCallback((key: InstanceSetting_Key) => fetchedSettingsRef.current.has(buildInstanceSettingName(key)), []);
+
   const updateSetting = useCallback(
     async (setting: InstanceSetting) => {
       const isAccessSetting = setting.value.case === "accessSetting";
@@ -250,6 +263,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
       initialize,
       fetchSetting,
       fetchSettings,
+      hasSetting,
       updateSetting,
     }),
     [
@@ -263,6 +277,7 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
       initialize,
       fetchSetting,
       fetchSettings,
+      hasSetting,
       updateSetting,
     ],
   );

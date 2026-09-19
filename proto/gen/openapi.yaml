@@ -3276,6 +3276,9 @@ components:
                     items:
                         $ref: '#/components/schemas/ChatMessage'
                     description: "Required. The conversation so far, oldest first, ending with the new user\r\n message. The server keeps no conversation state."
+                includeComments:
+                    type: boolean
+                    description: "Optional. Whether each selected note's comment thread is injected alongside\r\n it. Defaults to false. Comments enlarge the context, so a turn that enables\r\n this can exceed a budget the same selection met without it."
         ChatResponse:
             type: object
             properties:
@@ -3309,6 +3312,9 @@ components:
                 truncated:
                     type: boolean
                     description: True when the provider stopped because the reply hit the token limit.
+                contextCommentCount:
+                    type: string
+                    description: "How many comments were injected alongside the notes. Zero unless the turn\r\n enabled include_comments."
         Color:
             type: object
             properties:
@@ -3528,6 +3534,9 @@ components:
                 filter:
                     type: string
                     description: "Required. A CEL filter selecting which notes the model may read. An empty\r\n filter selects nothing, not everything."
+                includeComments:
+                    type: boolean
+                    description: "Optional. Whether each matched note's comment thread is injected alongside\r\n it. Defaults to false, so a selection costs exactly what the estimate\r\n reports unless the caller opts in. Comments are never selected directly:\r\n they follow the notes the filter matched, under the caller's own access\r\n scope, so a comment the caller cannot read is never included."
         EstimateChatContextResponse:
             type: object
             properties:
@@ -3539,7 +3548,9 @@ components:
                     description: The total character count of the matched notes' content.
                 estimatedTokens:
                     type: string
-                    description: The estimated token cost of the selection.
+                    description: |-
+                        The estimated token cost of the selection. Comment content is not counted
+                        here, because comments are resolved only when a turn is actually sent.
                 contextBudgetTokens:
                     type: string
                     description: The budget this estimate was measured against.

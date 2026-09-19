@@ -1,39 +1,39 @@
-import { SettingsIcon, SparklesIcon } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SettingsIcon, SparklesIcon, SquarePenIcon } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ChatComposer from "@/components/AIHub/ChatComposer";
 import ChatThread from "@/components/AIHub/ChatThread";
-import ContextRail from "@/components/AIHub/ContextRail";
-import { Button } from "@/components/ui/button";
-import { aiServiceClient } from "@/connect";
+import MemoContextPanel from "@/components/AIHub/MemoContextPanel";
+import ConfirmDialog from "@/components/ConfirmDialog";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useAiContext } from "@/contexts/AiContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useAiChat } from "@/hooks/useAiChat";
-import { useTagCounts } from "@/hooks/useUserQueries";
-import { buildContextFilter } from "@/lib/ai-context";
 import { isChatCapableProviderType } from "@/lib/ai-providers";
+import { cn } from "@/lib/utils";
 import { ROUTES } from "@/router/routes";
 import { InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
 
-/** Debounce for the context estimate, so typing a tag filter is not a request storm. */
-const ESTIMATE_DEBOUNCE_MS = 300;
-
 /**
  * The AI Hub: chat with your notes, and let the model propose note changes that
  * you confirm. The conversation lives in this component (the server keeps no
- * chat state), while the notes the model may read are chosen explicitly in the
- * context rail.
+ * chat state), while the notes the model may read are chosen in the sidebar and
+ * shown beside the thread.
  */
 const AIHub = () => {
   const t = useTranslate();
-  const { aiSetting, fetchSetting } = useInstance();
-  const { data: tagCounts } = useTagCounts();
-  const { messages, isSending, send, resolveProposal } = useAiChat();
+  const { aiSetting, fetchSetting, hasSetting } = useInstance();
+  const { messages, isSending, progress, send, reset, resolveProposal } = useAiChat();
+  const { filter, includeComments, estimate, estimateError } = useAiContext();
+  const [isNewSessionOpen, setNewSessionOpen] = useState(false);
 
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [estimate, setEstimate] = useState<{ memoCount: number; estimatedTokens: number; budgetTokens: number; fits: boolean }>();
-  const [estimateError, setEstimateError] = useState<string>();
-  const [isEstimating, setIsEstimating] = useState(false);
+  // Startup only loads the general settings, so the AI setting has to be asked
+  // for here. Without this the page reads an empty default and claims chat is not
+  // configured, even on an instance that is configured.
+  useEffect(() => {
+    void fetchSetting(InstanceSetting_Key.AI).catch(() => undefined);
+  }, [fetchSetting]);
 
   const chatConfig = aiSetting.chat;
   const providerId = chatConfig?.providerId ?? "";
@@ -43,65 +43,9 @@ const AIHub = () => {
   // exactly what is missing instead of failing on send.
   const chatProvider = useMemo(() => aiSetting.providers.find((provider) => provider.id === providerId), [aiSetting.providers, providerId]);
   const isConfigured = Boolean(providerId && model && chatProvider && isChatCapableProviderType(chatProvider.type));
-
-  const availableTags = useMemo(
-    () =>
-      Object.entries(tagCounts ?? {})
-        .map(([tag, count]) => ({ tag, count }))
-        .sort((left, right) => right.count - left.count || left.tag.localeCompare(right.tag)),
-    [tagCounts],
-  );
-
-  const filter = useMemo(() => buildContextFilter(selectedTags), [selectedTags]);
-
-  // Estimate the selection whenever it changes. The server resolves the filter
-  // under the caller's access scope, so the numbers shown match what a turn
-  // would actually read.
-  const requestIdRef = useRef(0);
-  useEffect(() => {
-    if (!isConfigured) {
-      setEstimate(undefined);
-      setEstimateError(undefined);
-      return;
-    }
-
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setIsEstimating(true);
-
-    const timer = window.setTimeout(async () => {
-      try {
-        const response = await aiServiceClient.estimateChatContext({
-          filter,
-        });
-        // Ignore a stale response that a newer selection already superseded.
-        if (requestIdRef.current !== requestId) return;
-        setEstimate({
-          memoCount: Number(response.memoCount),
-          estimatedTokens: Number(response.estimatedTokens),
-          budgetTokens: Number(response.contextBudgetTokens),
-          fits: response.fits,
-        });
-        setEstimateError(undefined);
-      } catch (error: unknown) {
-        if (requestIdRef.current !== requestId) return;
-        setEstimate(undefined);
-        setEstimateError(error instanceof Error ? error.message : t("ai.context-estimate-failed"));
-      } finally {
-        if (requestIdRef.current === requestId) {
-          setIsEstimating(false);
-        }
-      }
-    }, ESTIMATE_DEBOUNCE_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [filter, isConfigured, t]);
-
-  const toggleTag = useCallback((tag: string) => {
-    setSelectedTags((previous) => (previous.includes(tag) ? previous.filter((item) => item !== tag) : [...previous, tag]));
-  }, []);
-
-  const clearTags = useCallback(() => setSelectedTags([]), []);
+  // An unloaded setting and an unconfigured one look identical in the data, so
+  // the page waits rather than telling the user to configure what already is.
+  const isConfigLoading = !isConfigured && !hasSetting(InstanceSetting_Key.AI);
 
   // Retires a proposal once the user applies or discards it, so a settled
   // proposal cannot be applied twice.
@@ -124,10 +68,24 @@ const AIHub = () => {
     (content: string) => {
       void send(content, {
         filter,
+        includeComments,
+        // The sidebar already measured this selection, so the progress indicator
+        // can name real counts instead of guessing.
+        estimatedMemoCount: estimate?.memoCount ?? 0,
+        estimatedCommentCount: 0,
       });
     },
-    [filter, send],
+    [estimate?.memoCount, filter, includeComments, send],
   );
+
+  if (isConfigLoading) {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col items-center gap-3 px-6 py-16 text-center">
+        <SparklesIcon className="size-7 animate-pulse text-muted-foreground/60" strokeWidth={1.8} />
+        <p className="text-sm text-muted-foreground">{t("ai.loading-config")}</p>
+      </div>
+    );
+  }
 
   if (!isConfigured) {
     return (
@@ -135,50 +93,63 @@ const AIHub = () => {
         <SparklesIcon className="size-7 text-muted-foreground/60" strokeWidth={1.8} />
         <h1 className="text-lg font-semibold text-foreground">{t("ai.title")}</h1>
         <p className="text-sm text-muted-foreground">{t("ai.not-configured")}</p>
-        <Button
-          variant="outline"
-          onClick={() => {
-            void fetchSetting(InstanceSetting_Key.AI);
-          }}
-          render={
-            <Link to={`${ROUTES.SETTING}?section=ai`}>
-              <SettingsIcon className="me-1.5 size-4" strokeWidth={2} />
-              {t("ai.open-settings")}
-            </Link>
-          }
-        />
+        {/* A link, not a Button: it navigates, and a real anchor is what keeps Enter,
+            middle-click and open-in-new-tab working. Wrapping it in Button's `render`
+            slot instead would put `role="button"` on the anchor, which suppresses the
+            anchor's own Enter activation. The AI setting is already fetched on mount,
+            so settings has it in hand and will not flash its own loading state. */}
+        <Link to={`${ROUTES.SETTING}#ai`} className={cn(buttonVariants({ variant: "outline" }))}>
+          <SettingsIcon className="me-1.5 size-4" strokeWidth={2} />
+          {t("ai.open-settings")}
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-4 lg:flex-row">
-      <aside className="flex min-h-0 shrink-0 flex-col border-border lg:w-72 lg:border-e lg:pe-4">
-        <ContextRail
-          availableTags={availableTags}
-          selectedTags={selectedTags}
-          onToggleTag={toggleTag}
-          onClearTags={clearTags}
-          memoCount={estimate?.memoCount ?? 0}
-          estimatedTokens={estimate?.estimatedTokens ?? 0}
-          budgetTokens={estimate?.budgetTokens ?? Number(chatConfig?.contextBudgetTokens ?? 0n)}
-          isEstimating={isEstimating}
-          estimateError={estimateError}
-        />
-      </aside>
-
       <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
         <header className="flex flex-wrap items-center gap-2">
           <h1 className="text-base font-semibold text-foreground">{t("ai.title")}</h1>
           <span className="font-mono text-xs text-muted-foreground">{model}</span>
+          {/* Only offered once there is a thread to clear, and only while no reply
+              is in flight: resetting mid-turn would let the reply land in a
+              conversation the user has already left. */}
+          {messages.length > 0 && (
+            <Button
+              variant="quiet"
+              size="sm"
+              className="ms-auto"
+              disabled={isSending}
+              onClick={() => setNewSessionOpen(true)}
+              data-new-session-trigger
+            >
+              <SquarePenIcon className="size-3.5" strokeWidth={1.8} />
+              {t("ai.new-session")}
+            </Button>
+          )}
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
-          <ChatThread messages={messages} isSending={isSending} onProposalResolved={handleProposalResolved} />
+          <ChatThread messages={messages} isSending={isSending} progress={progress} onProposalResolved={handleProposalResolved} />
         </div>
 
         <ChatComposer isSending={isSending} disabled={sendDisabled} disabledReason={sendDisabledReason} onSend={handleSend} />
       </section>
+
+      {/* The selector lives in the app sidebar, so the thread keeps the wider
+          column and the selection is shown rather than only counted. */}
+      <MemoContextPanel className="hidden min-h-0 w-80 shrink-0 border-s border-border lg:flex lg:ps-4" />
+
+      <ConfirmDialog
+        open={isNewSessionOpen}
+        onOpenChange={setNewSessionOpen}
+        title={t("ai.new-session-title")}
+        description={t("ai.new-session-description")}
+        confirmLabel={t("ai.new-session-confirm")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={reset}
+      />
     </div>
   );
 };

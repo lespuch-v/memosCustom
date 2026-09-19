@@ -148,17 +148,82 @@ func TestEstimateTokens(t *testing.T) {
 func TestBuildChatContextPromptDelimitsNotes(t *testing.T) {
 	t.Parallel()
 
-	prompt := buildChatContextPrompt(nil)
+	prompt := buildChatContextPrompt(nil, nil, nil)
 	require.Empty(t, prompt)
 
 	prompt = buildChatContextPrompt([]*store.Memo{
 		{UID: "one", Content: "first body"},
 		{UID: "two", Content: "second body"},
-	})
+	}, nil, nil)
 	require.Contains(t, prompt, "id: memos/one")
 	require.Contains(t, prompt, "first body")
 	require.Contains(t, prompt, "id: memos/two")
 	require.Contains(t, prompt, "second body")
+	// A selection without comments must not suggest a discussion exists.
+	require.NotContains(t, prompt, "comments:")
+}
+
+// TestBuildChatContextPromptNestsCommentsUnderTheirNote pins the prompt shape a
+// thread produces: comments follow the note they belong to, carry their author,
+// and a reply is marked as nested rather than read as a separate remark.
+func TestBuildChatContextPromptNestsCommentsUnderTheirNote(t *testing.T) {
+	t.Parallel()
+
+	notes := []*store.Memo{
+		{ID: 1, UID: "one", Content: "first body"},
+		{ID: 2, UID: "two", Content: "second body"},
+	}
+	parentUID := "one"
+	comments := map[int32][]*store.Memo{
+		1: {
+			{ID: 10, UID: "c1", CreatorID: 7, Content: "is this still open?", CreatedTs: 100},
+			{ID: 11, UID: "c2", CreatorID: 8, Content: "yes, moved to Friday", CreatedTs: 200, ParentUID: &parentUID},
+		},
+	}
+	usernames := map[int32]string{7: "vasyl", 8: "peer"}
+
+	prompt := buildChatContextPrompt(notes, comments, usernames)
+
+	require.Contains(t, prompt, "comments:")
+	require.Contains(t, prompt, "vasyl: is this still open?")
+	require.Contains(t, prompt, "  - peer: yes, moved to Friday")
+	// The note with no thread must not gain a comments section.
+	require.Equal(t, 1, strings.Count(prompt, "comments:"))
+
+	// The thread must sit under its own note, not after the following one.
+	require.Less(t, strings.Index(prompt, "vasyl: is this still open?"), strings.Index(prompt, "id: memos/two"))
+}
+
+// TestBuildChatContextPromptOrdersThreadOldestFirst guards the reading order:
+// the store returns newest first, which would render a conversation backwards.
+func TestBuildChatContextPromptOrdersThreadOldestFirst(t *testing.T) {
+	t.Parallel()
+
+	prompt := buildChatContextPrompt(
+		[]*store.Memo{{ID: 1, UID: "one", Content: "body"}},
+		map[int32][]*store.Memo{1: {
+			{ID: 10, CreatorID: 7, Content: "first remark", CreatedTs: 100},
+			{ID: 11, CreatorID: 7, Content: "second remark", CreatedTs: 200},
+		}},
+		map[int32]string{7: "vasyl"},
+	)
+
+	require.Less(t, strings.Index(prompt, "first remark"), strings.Index(prompt, "second remark"))
+}
+
+// TestBuildChatContextPromptOmitsUnknownAuthor covers a comment whose creator
+// cannot be resolved: the content must still reach the model.
+func TestBuildChatContextPromptOmitsUnknownAuthor(t *testing.T) {
+	t.Parallel()
+
+	prompt := buildChatContextPrompt(
+		[]*store.Memo{{ID: 1, UID: "one", Content: "body"}},
+		map[int32][]*store.Memo{1: {{ID: 10, CreatorID: 99, Content: "anonymous remark"}}},
+		map[int32]string{},
+	)
+
+	require.Contains(t, prompt, "anonymous remark")
+	require.NotContains(t, prompt, "99:")
 }
 
 func TestBuildChatSystemPromptStatesProposalProtocol(t *testing.T) {

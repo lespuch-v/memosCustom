@@ -634,6 +634,219 @@ func TestChatUpdateProposalIncludesTargetSnapshot(t *testing.T) {
 	require.Equal(t, "original body", resp.Proposals[0].GetTargetContent())
 }
 
+// TestChatExcludesCommentsByDefault pins the default: a comment is a note of its
+// own, so a tag it carries must not turn it into a standalone context entry.
+// Comments are injected only when the caller asks for them, which keeps a
+// selection costing exactly what the estimate reported.
+func TestChatExcludesCommentsByDefault(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "chat-comments-off-user")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+
+	parent, err := ts.Store.CreateMemo(ctx, &store.Memo{
+		UID: "chat-comments-off-note", CreatorID: user.ID,
+		Content: "note body", Visibility: store.Private,
+		Payload: &storepb.MemoPayload{Tags: []string{"journal"}},
+	})
+	require.NoError(t, err)
+	_, err = ts.Service.CreateMemoComment(userCtx, &v1pb.CreateMemoCommentRequest{
+		Name: "memos/" + parent.UID,
+		Comment: &v1pb.Memo{
+			// The comment carries the selected tag through a hashtag in its own
+			// content, so only the comment-specific exclusion keeps it out of the
+			// selection.
+			Content:    "tagged remark #journal",
+			Visibility: v1pb.Visibility_PRIVATE,
+		},
+	})
+	require.NoError(t, err)
+
+	server, requests := chatProviderServer(t, "Understood.")
+	configureChatProvider(t, ts, server.URL, &storepb.ChatConfig{ProviderId: "router-main", Model: "vendor/model-a"})
+
+	resp, err := ts.Service.Chat(userCtx, &v1pb.ChatRequest{
+		Filter: `"journal" in tags`,
+		Messages: []*v1pb.ChatMessage{{
+			Role:    v1pb.ChatMessageRole_CHAT_MESSAGE_ROLE_USER,
+			Content: "summarize",
+		}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), resp.ContextMemoCount, "a comment must never be selected as a note")
+	require.Equal(t, int64(0), resp.ContextCommentCount)
+
+	system := (*requests)[0]["messages"].([]any)[0].(map[string]any)
+	systemContent, ok := system["content"].(string)
+	require.True(t, ok)
+	require.Contains(t, systemContent, "note body")
+	require.NotContains(t, systemContent, "tagged remark", "comments are opt-in")
+	require.NotContains(t, systemContent, "comments:")
+}
+
+// TestChatInjectsCommentsWhenRequested is the bug this change fixes: asking the
+// model about a note must let it read the discussion under that note.
+func TestChatInjectsCommentsWhenRequested(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "chat-comments-on-user")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+
+	parent, err := ts.Store.CreateMemo(ctx, &store.Memo{
+		UID: "chat-comments-on-note", CreatorID: user.ID,
+		Content: "note body", Visibility: store.Private,
+		Payload: &storepb.MemoPayload{Tags: []string{"journal"}},
+	})
+	require.NoError(t, err)
+
+	comment, err := ts.Service.CreateMemoComment(userCtx, &v1pb.CreateMemoCommentRequest{
+		Name:    "memos/" + parent.UID,
+		Comment: &v1pb.Memo{Content: "is this still open?", Visibility: v1pb.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+
+	// A reply hangs off the comment, so reaching it needs the transitive walk.
+	_, err = ts.Service.CreateMemoComment(userCtx, &v1pb.CreateMemoCommentRequest{
+		Name:    comment.Name,
+		Comment: &v1pb.Memo{Content: "yes, moved to Friday", Visibility: v1pb.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+
+	server, requests := chatProviderServer(t, "Understood.")
+	configureChatProvider(t, ts, server.URL, &storepb.ChatConfig{ProviderId: "router-main", Model: "vendor/model-a"})
+
+	resp, err := ts.Service.Chat(userCtx, &v1pb.ChatRequest{
+		Filter:          `"journal" in tags`,
+		IncludeComments: true,
+		Messages: []*v1pb.ChatMessage{{
+			Role:    v1pb.ChatMessageRole_CHAT_MESSAGE_ROLE_USER,
+			Content: "what is the status?",
+		}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), resp.ContextMemoCount, "comments must not inflate the note count")
+	require.Equal(t, int64(2), resp.ContextCommentCount)
+
+	system := (*requests)[0]["messages"].([]any)[0].(map[string]any)
+	systemContent, ok := system["content"].(string)
+	require.True(t, ok)
+	require.Contains(t, systemContent, "note body")
+	require.Contains(t, systemContent, "comments:")
+	require.Contains(t, systemContent, "chat-comments-on-user: is this still open?")
+	require.Contains(t, systemContent, "  - chat-comments-on-user: yes, moved to Friday", "a reply must read as nested")
+
+	// The thread belongs under its own note, so the model reads it in place.
+	require.Less(t,
+		strings.Index(systemContent, "is this still open?"),
+		strings.Index(systemContent, "yes, moved to Friday"),
+		"a thread reads oldest first",
+	)
+}
+
+// TestChatOmitsCommentsTheCallerCannotRead guards the boundary this feature must
+// not move: a comment's own visibility decides, never its parent's, so opting
+// into comments can never expose a private remark on a readable note.
+func TestChatOmitsCommentsTheCallerCannotRead(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	owner, err := ts.CreateRegularUser(ctx, "chat-comment-owner")
+	require.NoError(t, err)
+	ownerCtx := ts.CreateUserContext(ctx, owner.ID)
+
+	reader, err := ts.CreateRegularUser(ctx, "chat-comment-reader")
+	require.NoError(t, err)
+	readerCtx := ts.CreateUserContext(ctx, reader.ID)
+
+	parent, err := ts.Store.CreateMemo(ctx, &store.Memo{
+		UID: "chat-shared-note", CreatorID: owner.ID,
+		Content: "shared body", Visibility: store.Public,
+		Payload: &storepb.MemoPayload{Tags: []string{"shared"}},
+	})
+	require.NoError(t, err)
+
+	_, err = ts.Service.CreateMemoComment(ownerCtx, &v1pb.CreateMemoCommentRequest{
+		Name:    "memos/" + parent.UID,
+		Comment: &v1pb.Memo{Content: "owner private remark", Visibility: v1pb.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+	_, err = ts.Service.CreateMemoComment(ownerCtx, &v1pb.CreateMemoCommentRequest{
+		Name:    "memos/" + parent.UID,
+		Comment: &v1pb.Memo{Content: "owner public remark", Visibility: v1pb.Visibility_PUBLIC},
+	})
+	require.NoError(t, err)
+
+	server, requests := chatProviderServer(t, "Understood.")
+	configureChatProvider(t, ts, server.URL, &storepb.ChatConfig{ProviderId: "router-main", Model: "vendor/model-a"})
+
+	resp, err := ts.Service.Chat(readerCtx, &v1pb.ChatRequest{
+		Filter:          `"shared" in tags`,
+		IncludeComments: true,
+		Messages: []*v1pb.ChatMessage{{
+			Role:    v1pb.ChatMessageRole_CHAT_MESSAGE_ROLE_USER,
+			Content: "summarize the discussion",
+		}},
+	})
+	require.NoError(t, err)
+	require.Equal(t, int64(1), resp.ContextMemoCount)
+	require.Equal(t, int64(1), resp.ContextCommentCount)
+
+	system := (*requests)[0]["messages"].([]any)[0].(map[string]any)
+	systemContent, ok := system["content"].(string)
+	require.True(t, ok)
+	require.Contains(t, systemContent, "shared body")
+	require.Contains(t, systemContent, "owner public remark")
+	require.NotContains(t, systemContent, "owner private remark", "a comment's own visibility must decide")
+}
+
+// TestEstimateChatContextExcludesComments pins the receipt the Hub shows while
+// the user edits a selection: comment content is resolved only when a turn is
+// sent, so the estimate must not depend on the include_comments flag.
+func TestEstimateChatContextExcludesComments(t *testing.T) {
+	ctx := context.Background()
+	ts := NewTestService(t)
+	defer ts.Cleanup()
+
+	user, err := ts.CreateRegularUser(ctx, "estimate-comments-user")
+	require.NoError(t, err)
+	userCtx := ts.CreateUserContext(ctx, user.ID)
+
+	parent, err := ts.Store.CreateMemo(ctx, &store.Memo{
+		UID: "estimate-comments-note", CreatorID: user.ID,
+		Content: "note body", Visibility: store.Private,
+		Payload: &storepb.MemoPayload{Tags: []string{"estimable"}},
+	})
+	require.NoError(t, err)
+	_, err = ts.Service.CreateMemoComment(userCtx, &v1pb.CreateMemoCommentRequest{
+		Name:    "memos/" + parent.UID,
+		Comment: &v1pb.Memo{Content: strings.Repeat("z", 400), Visibility: v1pb.Visibility_PRIVATE},
+	})
+	require.NoError(t, err)
+
+	server, _ := chatProviderServer(t, "unused")
+	configureChatProvider(t, ts, server.URL, &storepb.ChatConfig{
+		ProviderId: "router-main", Model: "vendor/model-a", ContextBudgetTokens: 200,
+	})
+
+	for _, includeComments := range []bool{false, true} {
+		resp, err := ts.Service.EstimateChatContext(userCtx, &v1pb.EstimateChatContextRequest{
+			Filter:          `"estimable" in tags`,
+			IncludeComments: includeComments,
+		})
+		require.NoError(t, err)
+		require.Equal(t, int64(1), resp.MemoCount)
+		require.Equal(t, int64(len("note body")), resp.TotalChars, "comment content must not change the estimate")
+		require.True(t, resp.Fits)
+	}
+}
+
 // TestChatRefusesSelectionLargerThanTheNoteCap pins the "never silently subset"
 // rule at the note-count boundary. Exceeding the cap must be an error, not a
 // quiet truncation, because a receipt that dropped notes would misreport what
