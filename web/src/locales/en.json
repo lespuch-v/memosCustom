@@ -1,4 +1,20 @@
 {
+  "semantic-analysis": {
+    "actionable": "Actionable",
+    "analyze-again": "Analyze again",
+    "ephemeral": "A private, on-demand reading. These results are not saved.",
+    "error": "Semantic analysis could not be completed.",
+    "idea": "Idea",
+    "journal": "Journal",
+    "loading": "Reading this note…",
+    "open": "Inspect semantics",
+    "reference": "Reference",
+    "retry": "Try again",
+    "revisit": "Worth revisiting",
+    "task": "Task",
+    "technical": "Technical / software",
+    "title": "Semantic analysis"
+  },
   "ai": {
     "composer-hint": "Enter sends. Shift+Enter adds a new line.",
     "composer-placeholder": "Ask about your notes, or ask for a new note…",

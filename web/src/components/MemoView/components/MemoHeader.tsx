@@ -2,6 +2,7 @@ import { PinIcon } from "lucide-react";
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import RelativeTime from "@/components/RelativeTime";
+import { SemanticAnalysisButton } from "@/components/SemanticAnalysis";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FOCUS_VISIBLE_OUTLINE_CLASSES } from "@/components/ui/focus";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -84,6 +85,7 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ timeDisplay = "relative", showC
       </div>
 
       <div data-slot="memo-header-actions" className="flex shrink-0 select-none flex-row items-center justify-end gap-1">
+        {currentUser && <SemanticAnalysisButton memo={memo} />}
         {currentUser && !isArchived && (
           // On desktop the picker's trigger shows only while the card is engaged or the picker is open.
           <span className="flex sm:hidden sm:group-hover:flex sm:group-focus-within:flex sm:has-[[data-popup-open]]:flex">
