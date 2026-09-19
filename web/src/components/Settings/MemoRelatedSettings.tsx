@@ -15,6 +15,7 @@ import {
   InstanceSettingSchema,
 } from "@/types/proto/api/v1/instance_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import ReactionEmojiPicker from "./ReactionEmojiPicker";
 import SettingGroup from "./SettingGroup";
 import { SettingList, SettingListItem, SettingPanel } from "./SettingList";
 import SettingSection from "./SettingSection";
@@ -158,10 +159,16 @@ const MemoRelatedSettings = () => {
                 onChange={(event) => setEditingReaction(event.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && upsertReaction()}
               />
-              <Button variant="outline" size="sm" onClick={upsertReaction} disabled={!editingReaction.trim()}>
-                <CheckIcon className="w-4 h-4 mr-1.5" />
-                {t("setting.memo.add-reaction")}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={upsertReaction} disabled={!editingReaction.trim()}>
+                  <CheckIcon className="w-4 h-4 mr-1.5" />
+                  {t("setting.memo.add-reaction")}
+                </Button>
+                <ReactionEmojiPicker
+                  configured={memoRelatedSetting.reactions}
+                  onPick={(emoji) => updatePartialSetting({ reactions: uniq([...memoRelatedSetting.reactions, emoji]) })}
+                />
+              </div>
             </div>
           }
         >
