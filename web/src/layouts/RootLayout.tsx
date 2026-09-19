@@ -9,6 +9,7 @@ import AppSidebar, {
   SidebarResizeHandle,
   useSidebarWidth,
 } from "@/components/AppSidebar";
+import { AiContextProvider } from "@/contexts/AiContext";
 import { AppSidebarProvider } from "@/contexts/AppSidebarContext";
 import { GlobalMemoEditorProvider } from "@/contexts/GlobalMemoEditorContext";
 import { useInstance } from "@/contexts/InstanceContext";
@@ -48,8 +49,11 @@ const RootLayoutContent = () => {
   const { profile } = useInstance();
   const { removeFilter } = useMemoFilterContext();
   const { pathname } = location;
-  // The map fills the viewport and scrolls inside itself, so the document must not.
-  const fullBleed = resolveCollectionRoute(pathname).pathname.toLowerCase() === ROUTES.MAP;
+  // Routes that scroll inside themselves rather than with the document: the map
+  // fills the viewport, and the AI Hub is a chat shell whose thread and context
+  // panel each scroll on their own.
+  const routePath = resolveCollectionRoute(pathname).pathname.toLowerCase();
+  const fullBleed = routePath === ROUTES.MAP || routePath === ROUTES.AI;
   const prevPathnameRef = useRef<string | undefined>(undefined);
   const shellRef = useRef<HTMLDivElement>(null);
   const { width: sidebarWidth, minWidth, maxWidth, setWidth: setSidebarWidth } = useSidebarWidth();
@@ -113,9 +117,14 @@ const RootLayout = () => (
   <SpaceProvider>
     <MemoFilterProvider>
       <AppSidebarProvider>
-        <GlobalMemoEditorProvider>
-          <RootLayoutContent />
-        </GlobalMemoEditorProvider>
+        {/* The AI selector is rendered by the sidebar while the conversation that
+            reads the selection lives on the AI route, so the selection sits above
+            both rather than inside the page. */}
+        <AiContextProvider>
+          <GlobalMemoEditorProvider>
+            <RootLayoutContent />
+          </GlobalMemoEditorProvider>
+        </AiContextProvider>
       </AppSidebarProvider>
     </MemoFilterProvider>
   </SpaceProvider>

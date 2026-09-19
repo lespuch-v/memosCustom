@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"sort"
 	"strings"
 
 	"google.golang.org/grpc/codes"
@@ -35,9 +36,20 @@ const (
 type chatContext struct {
 	// prompt is the rendered note content injected into the system message.
 	prompt string
+	// selected is the notes the filter matched, in the order they were rendered.
+	selected []*store.Memo
+	// commentsByMemoID holds each selected note's comment thread. Empty unless
+	// the caller asked for comments.
+	commentsByMemoID map[int32][]*store.Memo
+	// usernamesByID attributes comments to their authors. Empty unless the
+	// caller asked for comments.
+	usernamesByID map[int32]string
 	// memoCount is how many notes were injected.
 	memoCount int64
-	// totalChars is the character count of the injected content.
+	// commentCount is how many comments were injected alongside them.
+	commentCount int64
+	// totalChars is the character count of the injected note content. Comments
+	// are excluded so the estimate stays stable regardless of include_comments.
 	totalChars int64
 	// estimatedTokens is totalChars converted through charsPerToken.
 	estimatedTokens int64
@@ -66,6 +78,7 @@ func (s *APIV1Service) estimateChatContext(ctx context.Context, filterText strin
 		totalChars += int64(len(memo.Content))
 	}
 	return &chatContext{
+		selected:        selected,
 		memoCount:       int64(len(selected)),
 		totalChars:      totalChars,
 		estimatedTokens: estimateTokens(totalChars),
@@ -73,9 +86,160 @@ func (s *APIV1Service) estimateChatContext(ctx context.Context, filterText strin
 	}, nil
 }
 
+// resolveChatContext resolves the notes a filter matches and, when the caller
+// opted in, their comment threads. Everything is read under the caller's memo
+// access scope, so neither a note nor a comment the caller could not already
+// read can enter the context.
+func (s *APIV1Service) resolveChatContext(
+	ctx context.Context,
+	filterText string,
+	includeComments bool,
+	budgetTokens int64,
+) (*chatContext, error) {
+	selection, err := s.estimateChatContext(ctx, filterText, budgetTokens)
+	if err != nil {
+		return nil, err
+	}
+
+	if includeComments && len(selection.selected) > 0 {
+		accessScope, _, err := s.resolveMemoAccessScope(ctx)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "%v", err)
+		}
+		commentsByMemoID, err := s.resolveMemoCommentsForContext(ctx, selection.selected, accessScope)
+		if err != nil {
+			return nil, err
+		}
+		selection.commentsByMemoID = commentsByMemoID
+
+		usernamesByID, err := s.listUsernamesByID(ctx, contextCommentCreatorIDs(commentsByMemoID))
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to resolve comment authors: %v", err)
+		}
+		selection.usernamesByID = usernamesByID
+
+		for _, comments := range commentsByMemoID {
+			selection.commentCount += int64(len(comments))
+		}
+	}
+
+	selection.prompt = buildChatContextPrompt(selection.selected, selection.commentsByMemoID, selection.usernamesByID)
+	return selection, nil
+}
+
+// resolveMemoCommentsForContext loads the comment threads of the selected notes
+// in two batched queries: the COMMENT relations that point at a selected note,
+// then the comments themselves.
+//
+// A reply is a comment on a comment, so the relation walk is transitive until
+// it stops finding new parents. That is the only way a reply can reach the
+// context: the filter matches notes, and a reply is not reachable from any note
+// the filter could have matched. The walk is bounded because a comment cannot
+// be its own ancestor.
+func (s *APIV1Service) resolveMemoCommentsForContext(
+	ctx context.Context,
+	selected []*store.Memo,
+	accessScope *store.MemoAccessScope,
+) (map[int32][]*store.Memo, error) {
+	selectedIDs := make([]int32, 0, len(selected))
+	// rootIDByMemoID maps every visited memo to the selected note its thread
+	// belongs to, seeded with the notes themselves so a comment's parent always
+	// resolves.
+	rootIDByMemoID := make(map[int32]int32, len(selected))
+	for _, memo := range selected {
+		selectedIDs = append(selectedIDs, memo.ID)
+		rootIDByMemoID[memo.ID] = memo.ID
+	}
+	// commentIDs collects the memos found through a COMMENT relation, which is
+	// what keeps the selected notes out of the comment fetch below.
+	commentIDs := make([]int32, 0)
+	seenCommentIDs := make(map[int32]struct{})
+
+	commentType := store.MemoRelationComment
+	// The notes to walk next: the selected notes first, then each generation of
+	// comments, so a nested reply is reached through its own parent.
+	walkIDs := selectedIDs
+	for len(walkIDs) > 0 {
+		relations, err := s.Store.ListMemoRelations(ctx, &store.FindMemoRelation{
+			RelatedMemoIDList: walkIDs,
+			Type:              &commentType,
+		})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to resolve comments for chat context: %v", err)
+		}
+
+		nextWalkIDs := make([]int32, 0, len(relations))
+		for _, relation := range relations {
+			// A comment has exactly one parent, so the first relation wins and a
+			// malformed duplicate cannot attach the same comment twice.
+			if _, seen := seenCommentIDs[relation.MemoID]; seen {
+				continue
+			}
+			// The walk only ever visits an already-mapped memo, so the parent's
+			// root is always known here.
+			rootIDByMemoID[relation.MemoID] = rootIDByMemoID[relation.RelatedMemoID]
+			seenCommentIDs[relation.MemoID] = struct{}{}
+			commentIDs = append(commentIDs, relation.MemoID)
+			nextWalkIDs = append(nextWalkIDs, relation.MemoID)
+		}
+		walkIDs = nextWalkIDs
+	}
+
+	if len(commentIDs) == 0 {
+		return map[int32][]*store.Memo{}, nil
+	}
+
+	state := store.Normal
+	comments, err := s.Store.ListMemos(ctx, &store.FindMemo{
+		IDList:    commentIDs,
+		RowStatus: &state,
+		// The same memo-local scope ListMemoComments applies: a comment's own
+		// visibility decides, never its parent's.
+		Access: accessScope,
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to load comments for chat context: %v", err)
+	}
+
+	commentsByMemoID := make(map[int32][]*store.Memo, len(comments))
+	for _, comment := range comments {
+		rootID := rootIDByMemoID[comment.ID]
+		commentsByMemoID[rootID] = append(commentsByMemoID[rootID], comment)
+	}
+	// ListMemos orders newest first; a thread reads oldest first. Comments
+	// written in the same second share a timestamp, so the id breaks the tie and
+	// keeps the thread in the order it was actually written.
+	for _, thread := range commentsByMemoID {
+		sort.Slice(thread, func(left, right int) bool {
+			if thread[left].CreatedTs != thread[right].CreatedTs {
+				return thread[left].CreatedTs < thread[right].CreatedTs
+			}
+			return thread[left].ID < thread[right].ID
+		})
+	}
+	return commentsByMemoID, nil
+}
+
+// contextCommentCreatorIDs collects the authors of every loaded comment so they
+// can be resolved in one query.
+func contextCommentCreatorIDs(commentsByMemoID map[int32][]*store.Memo) []int32 {
+	var creatorIDs []int32
+	for _, comments := range commentsByMemoID {
+		for _, comment := range comments {
+			creatorIDs = append(creatorIDs, comment.CreatorID)
+		}
+	}
+	return creatorIDs
+}
+
 // resolveChatContextMemos runs the selection filter under the caller's memo
 // access scope. Reusing the scope and the filter validator from ListMemos means
 // the model can never read a note the caller could not already read.
+//
+// Comments stay out of the selection on purpose: they are notes, so a tag they
+// carry would otherwise pull a comment in on its own, detached from the note it
+// belongs to. resolveMemoCommentsForContext attaches them to their parent
+// instead, when the caller asks for them.
 func (s *APIV1Service) resolveChatContextMemos(
 	ctx context.Context,
 	filterText string,
@@ -101,7 +265,6 @@ func (s *APIV1Service) resolveChatContextMemos(
 	// misreport what the model actually read.
 	limit := maxChatContextMemos + 1
 	memoFind := &store.FindMemo{
-		// Comments are not notes; including them would bury real content.
 		ExcludeComments: true,
 		RowStatus:       &state,
 		Access:          accessScope,
@@ -131,13 +294,20 @@ func estimateTokens(chars int64) int64 {
 }
 
 // buildChatContextPrompt renders the selected notes into the prompt section the
-// model reads. Notes are delimited so the model can tell them apart.
-func buildChatContextPrompt(memos []*store.Memo) string {
+// model reads. Notes are delimited so the model can tell them apart, and each
+// note's comments follow it so the model reads a discussion as part of the note
+// it belongs to rather than as an unrelated entry.
+func buildChatContextPrompt(memos []*store.Memo, commentsByMemoID map[int32][]*store.Memo, usernamesByID map[int32]string) string {
 	if len(memos) == 0 {
 		return ""
 	}
 	var builder strings.Builder
 	builder.WriteString("The user's notes follow. Treat them as the only source of truth about the user's own notes.\n")
+	if len(commentsByMemoID) > 0 {
+		// Without this, a note that carries no comments section would look like
+		// the model simply had not been given the comments.
+		builder.WriteString("A note's comments, when it has any, follow that note under a comments heading.\n")
+	}
 	for _, memo := range memos {
 		builder.WriteString("\n--- note ---\n")
 		if memo.UID != "" {
@@ -147,6 +317,28 @@ func buildChatContextPrompt(memos []*store.Memo) string {
 		}
 		builder.WriteString(strings.TrimSpace(memo.Content))
 		builder.WriteString("\n")
+
+		comments := commentsByMemoID[memo.ID]
+		if len(comments) == 0 {
+			continue
+		}
+		builder.WriteString("\ncomments:\n")
+		for _, comment := range comments {
+			// A reply hangs off another comment, so mark the nesting rather than
+			// letting the model read the thread as one flat exchange.
+			marker := "-"
+			if comment.ParentUID != nil {
+				marker = "  -"
+			}
+			builder.WriteString(marker)
+			builder.WriteString(" ")
+			if username, ok := usernamesByID[comment.CreatorID]; ok && username != "" {
+				builder.WriteString(username)
+				builder.WriteString(": ")
+			}
+			builder.WriteString(strings.TrimSpace(comment.Content))
+			builder.WriteString("\n")
+		}
 	}
 	builder.WriteString("\n--- end of notes ---\n")
 	return builder.String()

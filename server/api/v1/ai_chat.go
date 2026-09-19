@@ -177,29 +177,13 @@ func (s *APIV1Service) Chat(ctx context.Context, request *v1pb.ChatRequest) (*v1
 
 	// Resolve the selection and enforce the hard cap. A refused selection is an
 	// error, never a silent subset: the user sees which selection was too large.
-	accessScope, currentUser, err := s.resolveMemoAccessScope(ctx)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "%v", err)
-	}
-	selected, err := s.resolveChatContextMemos(ctx, request.GetFilter(), accessScope, currentUser)
+	selection, err := s.resolveChatContext(ctx, request.GetFilter(), request.GetIncludeComments(), budget)
 	if err != nil {
 		return nil, err
-	}
-
-	var totalChars int64
-	for _, memo := range selected {
-		totalChars += int64(len(memo.Content))
-	}
-	selection := &chatContext{
-		memoCount:       int64(len(selected)),
-		totalChars:      totalChars,
-		estimatedTokens: estimateTokens(totalChars),
-		budgetTokens:    budget,
 	}
 	if selection.estimatedTokens > selection.budgetTokens {
 		return nil, overBudgetError(selection)
 	}
-	selection.prompt = buildChatContextPrompt(selected)
 
 	client, err := newChatClient(provider)
 	if err != nil {
@@ -216,14 +200,15 @@ func (s *APIV1Service) Chat(ctx context.Context, request *v1pb.ChatRequest) (*v1
 	}
 
 	visibleText, proposals := parseChatProposals(completion.Text)
-	selectedByName := make(map[string]*store.Memo, len(selected))
-	for _, memo := range selected {
+	selectedByName := make(map[string]*store.Memo, len(selection.selected))
+	for _, memo := range selection.selected {
 		selectedByName["memos/"+memo.UID] = memo
 	}
 	response := &v1pb.ChatResponse{
 		Content:                visibleText,
 		Proposals:              make([]*v1pb.ChatProposal, 0, len(proposals)),
 		ContextMemoCount:       selection.memoCount,
+		ContextCommentCount:    selection.commentCount,
 		ContextEstimatedTokens: selection.estimatedTokens,
 		ContextBudgetTokens:    selection.budgetTokens,
 		PromptTokens:           completion.Usage.PromptTokens,

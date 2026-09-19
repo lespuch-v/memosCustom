@@ -99,6 +99,13 @@ message EstimateChatContextRequest {
   // filter selects nothing, not everything.
   string filter = 1 [(google.api.field_behavior) = REQUIRED];
 
+  // Optional. Whether each matched note's comment thread is injected alongside
+  // it. Defaults to false, so a selection costs exactly what the estimate
+  // reports unless the caller opts in. Comments are never selected directly:
+  // they follow the notes the filter matched, under the caller's own access
+  // scope, so a comment the caller cannot read is never included.
+  bool include_comments = 3 [(google.api.field_behavior) = OPTIONAL];
+
   reserved 2;
   reserved "context_budget_tokens";
 }
@@ -110,7 +117,8 @@ message EstimateChatContextResponse {
   // The total character count of the matched notes' content.
   int64 total_chars = 2;
 
-  // The estimated token cost of the selection.
+  // The estimated token cost of the selection. Comment content is not counted
+  // here, because comments are resolved only when a turn is actually sent.
   int64 estimated_tokens = 3;
 
   // The budget this estimate was measured against.
@@ -149,6 +157,10 @@ message ChatRequest {
   // message. The server keeps no conversation state.
   repeated ChatMessage messages = 4 [(google.api.field_behavior) = REQUIRED];
 
+  // Optional. Whether each selected note's comment thread is injected alongside
+  // it. Defaults to false. Comments enlarge the context, so a turn that enables
+  // this can exceed a budget the same selection met without it.
+  bool include_comments = 7 [(google.api.field_behavior) = OPTIONAL];
 }
 
 // ChatProposalAction is the kind of note change the model proposes.
@@ -206,4 +218,8 @@ message ChatResponse {
 
   // True when the provider stopped because the reply hit the token limit.
   bool truncated = 10;
+
+  // How many comments were injected alongside the notes. Zero unless the turn
+  // enabled include_comments.
+  int64 context_comment_count = 11;
 }

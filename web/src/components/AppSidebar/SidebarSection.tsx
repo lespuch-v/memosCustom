@@ -14,7 +14,10 @@ interface Props {
 }
 
 const SidebarSection = ({ label, ariaLabel, children, action }: Props) => (
-  <section className="w-full" aria-label={ariaLabel}>
+  // A label is both the visible heading and, on the section itself, its accessible
+  // name: a named `section` is a landmark, so the rail's lists can be navigated to
+  // by what they hold rather than only by their heading text.
+  <section className="w-full" aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}>
     {label !== undefined && <SidebarSectionHeader action={action}>{label}</SidebarSectionHeader>}
     {/* Flex gap keeps popup focus guards from affecting the visible row rhythm. */}
     <div className={SIDEBAR_SECTION_CONTENT_CLASSES}>{children}</div>

@@ -1,4 +1,6 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import RootLayout from "@/layouts/RootLayout";
@@ -46,6 +48,12 @@ vi.mock("@/utils/i18n", () => ({
 
 const SHELL_TEST_IDS = ["desktop-sidebar", "mobile-sidebar", "mobile-header", "quick-find"];
 
+// The shell now carries the AI context provider, whose tag counts are a query, so
+// the layout needs a client the way every data-backed page does.
+const ShellProviders = ({ children }: { children: ReactNode }) => (
+  <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>{children}</QueryClientProvider>
+);
+
 const RouteState = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,14 +75,16 @@ describe("RootLayout global editor shell", () => {
 
   it("mounts the composer provider inside the sidebar provider and keeps the shell across routes", () => {
     render(
-      <MemoryRouter initialEntries={["/attachments"]}>
-        <Routes>
-          <Route element={<RootLayout />}>
-            <Route path="attachments" element={<RouteState />} />
-            <Route path="inbox" element={<RouteState />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>,
+      <ShellProviders>
+        <MemoryRouter initialEntries={["/attachments"]}>
+          <Routes>
+            <Route element={<RootLayout />}>
+              <Route path="attachments" element={<RouteState />} />
+              <Route path="inbox" element={<RouteState />} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </ShellProviders>,
     );
 
     for (const testId of SHELL_TEST_IDS) {
@@ -96,14 +106,16 @@ describe("RootLayout global editor shell", () => {
     instanceState.accessMode = 1;
 
     render(
-      <MemoryRouter initialEntries={["/explore"]}>
-        <Routes>
-          <Route element={<RootLayout />}>
-            <Route path="explore" element={<div>Explore</div>} />
-          </Route>
-          <Route path="auth" element={<RouteState />} />
-        </Routes>
-      </MemoryRouter>,
+      <ShellProviders>
+        <MemoryRouter initialEntries={["/explore"]}>
+          <Routes>
+            <Route element={<RootLayout />}>
+              <Route path="explore" element={<div>Explore</div>} />
+            </Route>
+            <Route path="auth" element={<RouteState />} />
+          </Routes>
+        </MemoryRouter>
+      </ShellProviders>,
     );
 
     expect(screen.getByTestId("route")).toHaveTextContent("/auth");

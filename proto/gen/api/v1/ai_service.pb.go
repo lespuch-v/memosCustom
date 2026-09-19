@@ -465,9 +465,15 @@ type EstimateChatContextRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Required. A CEL filter selecting which notes the model may read. An empty
 	// filter selects nothing, not everything.
-	Filter        string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Filter string `protobuf:"bytes,1,opt,name=filter,proto3" json:"filter,omitempty"`
+	// Optional. Whether each matched note's comment thread is injected alongside
+	// it. Defaults to false, so a selection costs exactly what the estimate
+	// reports unless the caller opts in. Comments are never selected directly:
+	// they follow the notes the filter matched, under the caller's own access
+	// scope, so a comment the caller cannot read is never included.
+	IncludeComments bool `protobuf:"varint,3,opt,name=include_comments,json=includeComments,proto3" json:"include_comments,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *EstimateChatContextRequest) Reset() {
@@ -507,13 +513,21 @@ func (x *EstimateChatContextRequest) GetFilter() string {
 	return ""
 }
 
+func (x *EstimateChatContextRequest) GetIncludeComments() bool {
+	if x != nil {
+		return x.IncludeComments
+	}
+	return false
+}
+
 type EstimateChatContextResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// How many notes the selection matched.
 	MemoCount int64 `protobuf:"varint,1,opt,name=memo_count,json=memoCount,proto3" json:"memo_count,omitempty"`
 	// The total character count of the matched notes' content.
 	TotalChars int64 `protobuf:"varint,2,opt,name=total_chars,json=totalChars,proto3" json:"total_chars,omitempty"`
-	// The estimated token cost of the selection.
+	// The estimated token cost of the selection. Comment content is not counted
+	// here, because comments are resolved only when a turn is actually sent.
 	EstimatedTokens int64 `protobuf:"varint,3,opt,name=estimated_tokens,json=estimatedTokens,proto3" json:"estimated_tokens,omitempty"`
 	// The budget this estimate was measured against.
 	ContextBudgetTokens int64 `protobuf:"varint,4,opt,name=context_budget_tokens,json=contextBudgetTokens,proto3" json:"context_budget_tokens,omitempty"`
@@ -649,9 +663,13 @@ type ChatRequest struct {
 	Filter string `protobuf:"bytes,3,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Required. The conversation so far, oldest first, ending with the new user
 	// message. The server keeps no conversation state.
-	Messages      []*ChatMessage `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Messages []*ChatMessage `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
+	// Optional. Whether each selected note's comment thread is injected alongside
+	// it. Defaults to false. Comments enlarge the context, so a turn that enables
+	// this can exceed a budget the same selection met without it.
+	IncludeComments bool `protobuf:"varint,7,opt,name=include_comments,json=includeComments,proto3" json:"include_comments,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *ChatRequest) Reset() {
@@ -696,6 +714,13 @@ func (x *ChatRequest) GetMessages() []*ChatMessage {
 		return x.Messages
 	}
 	return nil
+}
+
+func (x *ChatRequest) GetIncludeComments() bool {
+	if x != nil {
+		return x.IncludeComments
+	}
+	return false
 }
 
 // ChatProposal is a note change the model suggested but did not perform. The
@@ -795,9 +820,12 @@ type ChatResponse struct {
 	// requested model when a router picks a backend.
 	Model string `protobuf:"bytes,9,opt,name=model,proto3" json:"model,omitempty"`
 	// True when the provider stopped because the reply hit the token limit.
-	Truncated     bool `protobuf:"varint,10,opt,name=truncated,proto3" json:"truncated,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Truncated bool `protobuf:"varint,10,opt,name=truncated,proto3" json:"truncated,omitempty"`
+	// How many comments were injected alongside the notes. Zero unless the turn
+	// enabled include_comments.
+	ContextCommentCount int64 `protobuf:"varint,11,opt,name=context_comment_count,json=contextCommentCount,proto3" json:"context_comment_count,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *ChatResponse) Reset() {
@@ -900,6 +928,13 @@ func (x *ChatResponse) GetTruncated() bool {
 	return false
 }
 
+func (x *ChatResponse) GetContextCommentCount() int64 {
+	if x != nil {
+		return x.ContextCommentCount
+	}
+	return 0
+}
+
 var File_api_v1_ai_service_proto protoreflect.FileDescriptor
 
 const file_api_v1_ai_service_proto_rawDesc = "" +
@@ -922,9 +957,10 @@ const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\x06models\x18\x01 \x03(\v2\x1d.memos.api.v1.AIProviderModelR\x06models\"H\n" +
 	"\x0fAIProviderModel\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12%\n" +
-	"\x0econtext_length\x18\x02 \x01(\x03R\rcontextLength\"V\n" +
+	"\x0econtext_length\x18\x02 \x01(\x03R\rcontextLength\"\x86\x01\n" +
 	"\x1aEstimateChatContextRequest\x12\x1b\n" +
-	"\x06filter\x18\x01 \x01(\tB\x03\xe0A\x02R\x06filterJ\x04\b\x02\x10\x03R\x15context_budget_tokens\"\xd0\x01\n" +
+	"\x06filter\x18\x01 \x01(\tB\x03\xe0A\x02R\x06filter\x12.\n" +
+	"\x10include_comments\x18\x03 \x01(\bB\x03\xe0A\x01R\x0fincludeCommentsJ\x04\b\x02\x10\x03R\x15context_budget_tokens\"\xd0\x01\n" +
 	"\x1bEstimateChatContextResponse\x12\x1d\n" +
 	"\n" +
 	"memo_count\x18\x01 \x01(\x03R\tmemoCount\x12\x1f\n" +
@@ -935,16 +971,17 @@ const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\x04fits\x18\x05 \x01(\bR\x04fits\"Z\n" +
 	"\vChatMessage\x121\n" +
 	"\x04role\x18\x01 \x01(\x0e2\x1d.memos.api.v1.ChatMessageRoleR\x04role\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\"\xc0\x01\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent\"\xf0\x01\n" +
 	"\vChatRequest\x12\x1b\n" +
 	"\x06filter\x18\x03 \x01(\tB\x03\xe0A\x01R\x06filter\x12:\n" +
-	"\bmessages\x18\x04 \x03(\v2\x19.memos.api.v1.ChatMessageB\x03\xe0A\x02R\bmessagesJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x05\x10\x06J\x04\b\x06\x10\aR\vprovider_idR\x05modelR\x15context_budget_tokensR\x15max_completion_tokens\"\xb9\x01\n" +
+	"\bmessages\x18\x04 \x03(\v2\x19.memos.api.v1.ChatMessageB\x03\xe0A\x02R\bmessages\x12.\n" +
+	"\x10include_comments\x18\a \x01(\bB\x03\xe0A\x01R\x0fincludeCommentsJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x05\x10\x06J\x04\b\x06\x10\aR\vprovider_idR\x05modelR\x15context_budget_tokensR\x15max_completion_tokens\"\xb9\x01\n" +
 	"\fChatProposal\x128\n" +
 	"\x06action\x18\x01 \x01(\x0e2 .memos.api.v1.ChatProposalActionR\x06action\x12\x18\n" +
 	"\acontent\x18\x02 \x01(\tR\acontent\x12\x16\n" +
 	"\x06target\x18\x03 \x01(\tR\x06target\x12*\n" +
 	"\x0etarget_content\x18\x04 \x01(\tH\x00R\rtargetContent\x88\x01\x01B\x11\n" +
-	"\x0f_target_content\"\xa7\x03\n" +
+	"\x0f_target_content\"\xdb\x03\n" +
 	"\fChatResponse\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\x128\n" +
 	"\tproposals\x18\x02 \x03(\v2\x1a.memos.api.v1.ChatProposalR\tproposals\x12,\n" +
@@ -956,7 +993,8 @@ const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\ftotal_tokens\x18\b \x01(\x03R\vtotalTokens\x12\x14\n" +
 	"\x05model\x18\t \x01(\tR\x05model\x12\x1c\n" +
 	"\ttruncated\x18\n" +
-	" \x01(\bR\ttruncated*q\n" +
+	" \x01(\bR\ttruncated\x122\n" +
+	"\x15context_comment_count\x18\v \x01(\x03R\x13contextCommentCount*q\n" +
 	"\x0fChatMessageRole\x12!\n" +
 	"\x1dCHAT_MESSAGE_ROLE_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16CHAT_MESSAGE_ROLE_USER\x10\x01\x12\x1f\n" +

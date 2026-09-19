@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
 import { Link, matchPath, useLocation, useNavigate } from "react-router-dom";
+import ContextRail from "@/components/AIHub/ContextRail";
 import { MAP_MEMO_FILTER } from "@/components/MapView/useMapMemos";
 import { MemoDetailSidebar } from "@/components/MemoDetailSidebar";
 import { DEFAULT_SETTING_SECTION, SETTINGS_SECTIONS } from "@/components/Settings/settingSections";
@@ -293,6 +294,7 @@ const RouteSidebarContent = () => {
   if (kind === "calendar") return <CollectionSidebarContent context="home" showStatistics={false} />;
   if (kind === "map") return <CollectionSidebarContent context="home" showStatistics={false} scopeFilter={MAP_MEMO_FILTER} />;
   if (kind === "attachments") return <AttachmentsSidebarContent />;
+  if (kind === "ai") return <ContextRail />;
   if (kind === "inbox") return <InboxSidebarContent />;
   if (kind === "settings") return <SettingsSidebarContent />;
   if (kind === "memo") return <MemoDetailSidebarContent />;
