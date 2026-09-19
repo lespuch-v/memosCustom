@@ -789,6 +789,14 @@ func (s *ConnectServiceHandler) Chat(ctx context.Context, req *connect.Request[v
 	return connect.NewResponse(resp), nil
 }
 
+func (s *ConnectServiceHandler) AnalyzeMemoSemantic(ctx context.Context, req *connect.Request[v1pb.AnalyzeMemoSemanticRequest]) (*connect.Response[v1pb.AnalyzeMemoSemanticResponse], error) {
+	resp, err := s.APIV1Service.AnalyzeMemoSemantic(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
 // IdentityProviderService
 
 func (s *ConnectServiceHandler) ListIdentityProviders(ctx context.Context, req *connect.Request[v1pb.ListIdentityProvidersRequest]) (*connect.Response[v1pb.ListIdentityProvidersResponse], error) {

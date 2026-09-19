@@ -124,6 +124,152 @@ func (ChatProposalAction) EnumDescriptor() ([]byte, []int) {
 	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{1}
 }
 
+type AnalyzeMemoSemanticRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Required. Memo resource name in the form memos/{uid}.
+	Memo          string `protobuf:"bytes,1,opt,name=memo,proto3" json:"memo,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AnalyzeMemoSemanticRequest) Reset() {
+	*x = AnalyzeMemoSemanticRequest{}
+	mi := &file_api_v1_ai_service_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AnalyzeMemoSemanticRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AnalyzeMemoSemanticRequest) ProtoMessage() {}
+
+func (x *AnalyzeMemoSemanticRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_ai_service_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AnalyzeMemoSemanticRequest.ProtoReflect.Descriptor instead.
+func (*AnalyzeMemoSemanticRequest) Descriptor() ([]byte, []int) {
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *AnalyzeMemoSemanticRequest) GetMemo() string {
+	if x != nil {
+		return x.Memo
+	}
+	return ""
+}
+
+type AnalyzeMemoSemanticResponse struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	IdeaProbability       float64                `protobuf:"fixed64,1,opt,name=idea_probability,json=ideaProbability,proto3" json:"idea_probability,omitempty"`
+	TaskProbability       float64                `protobuf:"fixed64,2,opt,name=task_probability,json=taskProbability,proto3" json:"task_probability,omitempty"`
+	JournalProbability    float64                `protobuf:"fixed64,3,opt,name=journal_probability,json=journalProbability,proto3" json:"journal_probability,omitempty"`
+	ReferenceProbability  float64                `protobuf:"fixed64,4,opt,name=reference_probability,json=referenceProbability,proto3" json:"reference_probability,omitempty"`
+	ActionableProbability float64                `protobuf:"fixed64,5,opt,name=actionable_probability,json=actionableProbability,proto3" json:"actionable_probability,omitempty"`
+	RevisitProbability    float64                `protobuf:"fixed64,6,opt,name=revisit_probability,json=revisitProbability,proto3" json:"revisit_probability,omitempty"`
+	TechnicalProbability  float64                `protobuf:"fixed64,7,opt,name=technical_probability,json=technicalProbability,proto3" json:"technical_probability,omitempty"`
+	// Provider-reported resolved model.
+	Model         string `protobuf:"bytes,8,opt,name=model,proto3" json:"model,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AnalyzeMemoSemanticResponse) Reset() {
+	*x = AnalyzeMemoSemanticResponse{}
+	mi := &file_api_v1_ai_service_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AnalyzeMemoSemanticResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AnalyzeMemoSemanticResponse) ProtoMessage() {}
+
+func (x *AnalyzeMemoSemanticResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_ai_service_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AnalyzeMemoSemanticResponse.ProtoReflect.Descriptor instead.
+func (*AnalyzeMemoSemanticResponse) Descriptor() ([]byte, []int) {
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetIdeaProbability() float64 {
+	if x != nil {
+		return x.IdeaProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetTaskProbability() float64 {
+	if x != nil {
+		return x.TaskProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetJournalProbability() float64 {
+	if x != nil {
+		return x.JournalProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetReferenceProbability() float64 {
+	if x != nil {
+		return x.ReferenceProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetActionableProbability() float64 {
+	if x != nil {
+		return x.ActionableProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetRevisitProbability() float64 {
+	if x != nil {
+		return x.RevisitProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetTechnicalProbability() float64 {
+	if x != nil {
+		return x.TechnicalProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
 type TranscribeRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Required. Audio input.
@@ -134,7 +280,7 @@ type TranscribeRequest struct {
 
 func (x *TranscribeRequest) Reset() {
 	*x = TranscribeRequest{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[0]
+	mi := &file_api_v1_ai_service_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -146,7 +292,7 @@ func (x *TranscribeRequest) String() string {
 func (*TranscribeRequest) ProtoMessage() {}
 
 func (x *TranscribeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[0]
+	mi := &file_api_v1_ai_service_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -159,7 +305,7 @@ func (x *TranscribeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscribeRequest.ProtoReflect.Descriptor instead.
 func (*TranscribeRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{0}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *TranscribeRequest) GetAudio() *TranscriptionAudio {
@@ -186,7 +332,7 @@ type TranscriptionAudio struct {
 
 func (x *TranscriptionAudio) Reset() {
 	*x = TranscriptionAudio{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[1]
+	mi := &file_api_v1_ai_service_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -198,7 +344,7 @@ func (x *TranscriptionAudio) String() string {
 func (*TranscriptionAudio) ProtoMessage() {}
 
 func (x *TranscriptionAudio) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[1]
+	mi := &file_api_v1_ai_service_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -211,7 +357,7 @@ func (x *TranscriptionAudio) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscriptionAudio.ProtoReflect.Descriptor instead.
 func (*TranscriptionAudio) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{1}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *TranscriptionAudio) GetSource() isTranscriptionAudio_Source {
@@ -281,7 +427,7 @@ type TranscribeResponse struct {
 
 func (x *TranscribeResponse) Reset() {
 	*x = TranscribeResponse{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[2]
+	mi := &file_api_v1_ai_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -293,7 +439,7 @@ func (x *TranscribeResponse) String() string {
 func (*TranscribeResponse) ProtoMessage() {}
 
 func (x *TranscribeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[2]
+	mi := &file_api_v1_ai_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -306,7 +452,7 @@ func (x *TranscribeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TranscribeResponse.ProtoReflect.Descriptor instead.
 func (*TranscribeResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{2}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *TranscribeResponse) GetText() string {
@@ -326,7 +472,7 @@ type ListProviderModelsRequest struct {
 
 func (x *ListProviderModelsRequest) Reset() {
 	*x = ListProviderModelsRequest{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[3]
+	mi := &file_api_v1_ai_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -338,7 +484,7 @@ func (x *ListProviderModelsRequest) String() string {
 func (*ListProviderModelsRequest) ProtoMessage() {}
 
 func (x *ListProviderModelsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[3]
+	mi := &file_api_v1_ai_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -351,7 +497,7 @@ func (x *ListProviderModelsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProviderModelsRequest.ProtoReflect.Descriptor instead.
 func (*ListProviderModelsRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{3}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListProviderModelsRequest) GetProviderId() string {
@@ -371,7 +517,7 @@ type ListProviderModelsResponse struct {
 
 func (x *ListProviderModelsResponse) Reset() {
 	*x = ListProviderModelsResponse{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[4]
+	mi := &file_api_v1_ai_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -383,7 +529,7 @@ func (x *ListProviderModelsResponse) String() string {
 func (*ListProviderModelsResponse) ProtoMessage() {}
 
 func (x *ListProviderModelsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[4]
+	mi := &file_api_v1_ai_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -396,7 +542,7 @@ func (x *ListProviderModelsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProviderModelsResponse.ProtoReflect.Descriptor instead.
 func (*ListProviderModelsResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{4}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListProviderModelsResponse) GetModels() []*AIProviderModel {
@@ -419,7 +565,7 @@ type AIProviderModel struct {
 
 func (x *AIProviderModel) Reset() {
 	*x = AIProviderModel{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[5]
+	mi := &file_api_v1_ai_service_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -431,7 +577,7 @@ func (x *AIProviderModel) String() string {
 func (*AIProviderModel) ProtoMessage() {}
 
 func (x *AIProviderModel) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[5]
+	mi := &file_api_v1_ai_service_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -444,7 +590,7 @@ func (x *AIProviderModel) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AIProviderModel.ProtoReflect.Descriptor instead.
 func (*AIProviderModel) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{5}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AIProviderModel) GetId() string {
@@ -478,7 +624,7 @@ type EstimateChatContextRequest struct {
 
 func (x *EstimateChatContextRequest) Reset() {
 	*x = EstimateChatContextRequest{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[6]
+	mi := &file_api_v1_ai_service_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -490,7 +636,7 @@ func (x *EstimateChatContextRequest) String() string {
 func (*EstimateChatContextRequest) ProtoMessage() {}
 
 func (x *EstimateChatContextRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[6]
+	mi := &file_api_v1_ai_service_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -503,7 +649,7 @@ func (x *EstimateChatContextRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EstimateChatContextRequest.ProtoReflect.Descriptor instead.
 func (*EstimateChatContextRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{6}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *EstimateChatContextRequest) GetFilter() string {
@@ -539,7 +685,7 @@ type EstimateChatContextResponse struct {
 
 func (x *EstimateChatContextResponse) Reset() {
 	*x = EstimateChatContextResponse{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[7]
+	mi := &file_api_v1_ai_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -551,7 +697,7 @@ func (x *EstimateChatContextResponse) String() string {
 func (*EstimateChatContextResponse) ProtoMessage() {}
 
 func (x *EstimateChatContextResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[7]
+	mi := &file_api_v1_ai_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -564,7 +710,7 @@ func (x *EstimateChatContextResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EstimateChatContextResponse.ProtoReflect.Descriptor instead.
 func (*EstimateChatContextResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{7}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EstimateChatContextResponse) GetMemoCount() int64 {
@@ -614,7 +760,7 @@ type ChatMessage struct {
 
 func (x *ChatMessage) Reset() {
 	*x = ChatMessage{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[8]
+	mi := &file_api_v1_ai_service_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -626,7 +772,7 @@ func (x *ChatMessage) String() string {
 func (*ChatMessage) ProtoMessage() {}
 
 func (x *ChatMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[8]
+	mi := &file_api_v1_ai_service_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -639,7 +785,7 @@ func (x *ChatMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatMessage.ProtoReflect.Descriptor instead.
 func (*ChatMessage) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{8}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ChatMessage) GetRole() ChatMessageRole {
@@ -674,7 +820,7 @@ type ChatRequest struct {
 
 func (x *ChatRequest) Reset() {
 	*x = ChatRequest{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[9]
+	mi := &file_api_v1_ai_service_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -686,7 +832,7 @@ func (x *ChatRequest) String() string {
 func (*ChatRequest) ProtoMessage() {}
 
 func (x *ChatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[9]
+	mi := &file_api_v1_ai_service_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -699,7 +845,7 @@ func (x *ChatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatRequest.ProtoReflect.Descriptor instead.
 func (*ChatRequest) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{9}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ChatRequest) GetFilter() string {
@@ -744,7 +890,7 @@ type ChatProposal struct {
 
 func (x *ChatProposal) Reset() {
 	*x = ChatProposal{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[10]
+	mi := &file_api_v1_ai_service_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -756,7 +902,7 @@ func (x *ChatProposal) String() string {
 func (*ChatProposal) ProtoMessage() {}
 
 func (x *ChatProposal) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[10]
+	mi := &file_api_v1_ai_service_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -769,7 +915,7 @@ func (x *ChatProposal) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatProposal.ProtoReflect.Descriptor instead.
 func (*ChatProposal) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{10}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ChatProposal) GetAction() ChatProposalAction {
@@ -830,7 +976,7 @@ type ChatResponse struct {
 
 func (x *ChatResponse) Reset() {
 	*x = ChatResponse{}
-	mi := &file_api_v1_ai_service_proto_msgTypes[11]
+	mi := &file_api_v1_ai_service_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -842,7 +988,7 @@ func (x *ChatResponse) String() string {
 func (*ChatResponse) ProtoMessage() {}
 
 func (x *ChatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_ai_service_proto_msgTypes[11]
+	mi := &file_api_v1_ai_service_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -855,7 +1001,7 @@ func (x *ChatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatResponse.ProtoReflect.Descriptor instead.
 func (*ChatResponse) Descriptor() ([]byte, []int) {
-	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{11}
+	return file_api_v1_ai_service_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *ChatResponse) GetContent() string {
@@ -939,7 +1085,18 @@ var File_api_v1_ai_service_proto protoreflect.FileDescriptor
 
 const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\n" +
-	"\x17api/v1/ai_service.proto\x12\fmemos.api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\"P\n" +
+	"\x17api/v1/ai_service.proto\x12\fmemos.api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\"5\n" +
+	"\x1aAnalyzeMemoSemanticRequest\x12\x17\n" +
+	"\x04memo\x18\x01 \x01(\tB\x03\xe0A\x02R\x04memo\"\x8c\x03\n" +
+	"\x1bAnalyzeMemoSemanticResponse\x12)\n" +
+	"\x10idea_probability\x18\x01 \x01(\x01R\x0fideaProbability\x12)\n" +
+	"\x10task_probability\x18\x02 \x01(\x01R\x0ftaskProbability\x12/\n" +
+	"\x13journal_probability\x18\x03 \x01(\x01R\x12journalProbability\x123\n" +
+	"\x15reference_probability\x18\x04 \x01(\x01R\x14referenceProbability\x125\n" +
+	"\x16actionable_probability\x18\x05 \x01(\x01R\x15actionableProbability\x12/\n" +
+	"\x13revisit_probability\x18\x06 \x01(\x01R\x12revisitProbability\x123\n" +
+	"\x15technical_probability\x18\a \x01(\x01R\x14technicalProbability\x12\x14\n" +
+	"\x05model\x18\b \x01(\tR\x05model\"P\n" +
 	"\x11TranscribeRequest\x12;\n" +
 	"\x05audio\x18\x01 \x01(\v2 .memos.api.v1.TranscriptionAudioB\x03\xe0A\x02R\x05audio\"\x9c\x01\n" +
 	"\x12TranscriptionAudio\x12\x1f\n" +
@@ -1002,13 +1159,14 @@ const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\x12ChatProposalAction\x12$\n" +
 	" CHAT_PROPOSAL_ACTION_UNSPECIFIED\x10\x00\x12\x1f\n" +
 	"\x1bCHAT_PROPOSAL_ACTION_CREATE\x10\x01\x12\x1f\n" +
-	"\x1bCHAT_PROPOSAL_ACTION_UPDATE\x10\x022\xae\x04\n" +
+	"\x1bCHAT_PROPOSAL_ACTION_UPDATE\x10\x022\xcd\x05\n" +
 	"\tAIService\x12y\n" +
 	"\n" +
 	"Transcribe\x12\x1f.memos.api.v1.TranscribeRequest\x1a .memos.api.v1.TranscribeResponse\"(\xdaA\x05audio\x82\xd3\xe4\x93\x02\x1a:\x01*\"\x15/api/v1/ai:transcribe\x12\x9e\x01\n" +
 	"\x12ListProviderModels\x12'.memos.api.v1.ListProviderModelsRequest\x1a(.memos.api.v1.ListProviderModelsResponse\"5\xdaA\vprovider_id\x82\xd3\xe4\x93\x02!\x12\x1f/api/v1/ai/{provider_id}/models\x12\x9e\x01\n" +
 	"\x13EstimateChatContext\x12(.memos.api.v1.EstimateChatContextRequest\x1a).memos.api.v1.EstimateChatContextResponse\"2\xdaA\x06filter\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/api/v1/ai:estimateChatContext\x12d\n" +
-	"\x04Chat\x12\x19.memos.api.v1.ChatRequest\x1a\x1a.memos.api.v1.ChatResponse\"%\xdaA\bmessages\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/ai:chatB\xa6\x01\n" +
+	"\x04Chat\x12\x19.memos.api.v1.ChatRequest\x1a\x1a.memos.api.v1.ChatResponse\"%\xdaA\bmessages\x82\xd3\xe4\x93\x02\x14:\x01*\"\x0f/api/v1/ai:chat\x12\x9c\x01\n" +
+	"\x13AnalyzeMemoSemantic\x12(.memos.api.v1.AnalyzeMemoSemanticRequest\x1a).memos.api.v1.AnalyzeMemoSemanticResponse\"0\xdaA\x04memo\x82\xd3\xe4\x93\x02#:\x01*\"\x1e/api/v1/ai:analyzeMemoSemanticB\xa6\x01\n" +
 	"\x10com.memos.api.v1B\x0eAiServiceProtoP\x01Z0github.com/usememos/memos/proto/gen/api/v1;apiv1\xa2\x02\x03MAX\xaa\x02\fMemos.Api.V1\xca\x02\fMemos\\Api\\V1\xe2\x02\x18Memos\\Api\\V1\\GPBMetadata\xea\x02\x0eMemos::Api::V1b\x06proto3"
 
 var (
@@ -1024,40 +1182,44 @@ func file_api_v1_ai_service_proto_rawDescGZIP() []byte {
 }
 
 var file_api_v1_ai_service_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_api_v1_ai_service_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_api_v1_ai_service_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_api_v1_ai_service_proto_goTypes = []any{
 	(ChatMessageRole)(0),                // 0: memos.api.v1.ChatMessageRole
 	(ChatProposalAction)(0),             // 1: memos.api.v1.ChatProposalAction
-	(*TranscribeRequest)(nil),           // 2: memos.api.v1.TranscribeRequest
-	(*TranscriptionAudio)(nil),          // 3: memos.api.v1.TranscriptionAudio
-	(*TranscribeResponse)(nil),          // 4: memos.api.v1.TranscribeResponse
-	(*ListProviderModelsRequest)(nil),   // 5: memos.api.v1.ListProviderModelsRequest
-	(*ListProviderModelsResponse)(nil),  // 6: memos.api.v1.ListProviderModelsResponse
-	(*AIProviderModel)(nil),             // 7: memos.api.v1.AIProviderModel
-	(*EstimateChatContextRequest)(nil),  // 8: memos.api.v1.EstimateChatContextRequest
-	(*EstimateChatContextResponse)(nil), // 9: memos.api.v1.EstimateChatContextResponse
-	(*ChatMessage)(nil),                 // 10: memos.api.v1.ChatMessage
-	(*ChatRequest)(nil),                 // 11: memos.api.v1.ChatRequest
-	(*ChatProposal)(nil),                // 12: memos.api.v1.ChatProposal
-	(*ChatResponse)(nil),                // 13: memos.api.v1.ChatResponse
+	(*AnalyzeMemoSemanticRequest)(nil),  // 2: memos.api.v1.AnalyzeMemoSemanticRequest
+	(*AnalyzeMemoSemanticResponse)(nil), // 3: memos.api.v1.AnalyzeMemoSemanticResponse
+	(*TranscribeRequest)(nil),           // 4: memos.api.v1.TranscribeRequest
+	(*TranscriptionAudio)(nil),          // 5: memos.api.v1.TranscriptionAudio
+	(*TranscribeResponse)(nil),          // 6: memos.api.v1.TranscribeResponse
+	(*ListProviderModelsRequest)(nil),   // 7: memos.api.v1.ListProviderModelsRequest
+	(*ListProviderModelsResponse)(nil),  // 8: memos.api.v1.ListProviderModelsResponse
+	(*AIProviderModel)(nil),             // 9: memos.api.v1.AIProviderModel
+	(*EstimateChatContextRequest)(nil),  // 10: memos.api.v1.EstimateChatContextRequest
+	(*EstimateChatContextResponse)(nil), // 11: memos.api.v1.EstimateChatContextResponse
+	(*ChatMessage)(nil),                 // 12: memos.api.v1.ChatMessage
+	(*ChatRequest)(nil),                 // 13: memos.api.v1.ChatRequest
+	(*ChatProposal)(nil),                // 14: memos.api.v1.ChatProposal
+	(*ChatResponse)(nil),                // 15: memos.api.v1.ChatResponse
 }
 var file_api_v1_ai_service_proto_depIdxs = []int32{
-	3,  // 0: memos.api.v1.TranscribeRequest.audio:type_name -> memos.api.v1.TranscriptionAudio
-	7,  // 1: memos.api.v1.ListProviderModelsResponse.models:type_name -> memos.api.v1.AIProviderModel
+	5,  // 0: memos.api.v1.TranscribeRequest.audio:type_name -> memos.api.v1.TranscriptionAudio
+	9,  // 1: memos.api.v1.ListProviderModelsResponse.models:type_name -> memos.api.v1.AIProviderModel
 	0,  // 2: memos.api.v1.ChatMessage.role:type_name -> memos.api.v1.ChatMessageRole
-	10, // 3: memos.api.v1.ChatRequest.messages:type_name -> memos.api.v1.ChatMessage
+	12, // 3: memos.api.v1.ChatRequest.messages:type_name -> memos.api.v1.ChatMessage
 	1,  // 4: memos.api.v1.ChatProposal.action:type_name -> memos.api.v1.ChatProposalAction
-	12, // 5: memos.api.v1.ChatResponse.proposals:type_name -> memos.api.v1.ChatProposal
-	2,  // 6: memos.api.v1.AIService.Transcribe:input_type -> memos.api.v1.TranscribeRequest
-	5,  // 7: memos.api.v1.AIService.ListProviderModels:input_type -> memos.api.v1.ListProviderModelsRequest
-	8,  // 8: memos.api.v1.AIService.EstimateChatContext:input_type -> memos.api.v1.EstimateChatContextRequest
-	11, // 9: memos.api.v1.AIService.Chat:input_type -> memos.api.v1.ChatRequest
-	4,  // 10: memos.api.v1.AIService.Transcribe:output_type -> memos.api.v1.TranscribeResponse
-	6,  // 11: memos.api.v1.AIService.ListProviderModels:output_type -> memos.api.v1.ListProviderModelsResponse
-	9,  // 12: memos.api.v1.AIService.EstimateChatContext:output_type -> memos.api.v1.EstimateChatContextResponse
-	13, // 13: memos.api.v1.AIService.Chat:output_type -> memos.api.v1.ChatResponse
-	10, // [10:14] is the sub-list for method output_type
-	6,  // [6:10] is the sub-list for method input_type
+	14, // 5: memos.api.v1.ChatResponse.proposals:type_name -> memos.api.v1.ChatProposal
+	4,  // 6: memos.api.v1.AIService.Transcribe:input_type -> memos.api.v1.TranscribeRequest
+	7,  // 7: memos.api.v1.AIService.ListProviderModels:input_type -> memos.api.v1.ListProviderModelsRequest
+	10, // 8: memos.api.v1.AIService.EstimateChatContext:input_type -> memos.api.v1.EstimateChatContextRequest
+	13, // 9: memos.api.v1.AIService.Chat:input_type -> memos.api.v1.ChatRequest
+	2,  // 10: memos.api.v1.AIService.AnalyzeMemoSemantic:input_type -> memos.api.v1.AnalyzeMemoSemanticRequest
+	6,  // 11: memos.api.v1.AIService.Transcribe:output_type -> memos.api.v1.TranscribeResponse
+	8,  // 12: memos.api.v1.AIService.ListProviderModels:output_type -> memos.api.v1.ListProviderModelsResponse
+	11, // 13: memos.api.v1.AIService.EstimateChatContext:output_type -> memos.api.v1.EstimateChatContextResponse
+	15, // 14: memos.api.v1.AIService.Chat:output_type -> memos.api.v1.ChatResponse
+	3,  // 15: memos.api.v1.AIService.AnalyzeMemoSemantic:output_type -> memos.api.v1.AnalyzeMemoSemanticResponse
+	11, // [11:16] is the sub-list for method output_type
+	6,  // [6:11] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
 	6,  // [6:6] is the sub-list for extension extendee
 	0,  // [0:6] is the sub-list for field type_name
@@ -1068,18 +1230,18 @@ func file_api_v1_ai_service_proto_init() {
 	if File_api_v1_ai_service_proto != nil {
 		return
 	}
-	file_api_v1_ai_service_proto_msgTypes[1].OneofWrappers = []any{
+	file_api_v1_ai_service_proto_msgTypes[3].OneofWrappers = []any{
 		(*TranscriptionAudio_Content)(nil),
 		(*TranscriptionAudio_Uri)(nil),
 	}
-	file_api_v1_ai_service_proto_msgTypes[10].OneofWrappers = []any{}
+	file_api_v1_ai_service_proto_msgTypes[12].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_ai_service_proto_rawDesc), len(file_api_v1_ai_service_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   12,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

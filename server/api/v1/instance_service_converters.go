@@ -368,9 +368,10 @@ func convertInstanceAISettingFromStore(setting *storepb.InstanceAISetting) *v1pb
 	}
 
 	aiSetting := &v1pb.InstanceSetting_AISetting{
-		Providers:     make([]*v1pb.InstanceSetting_AIProviderConfig, 0, len(setting.Providers)),
-		Transcription: convertTranscriptionConfigFromStore(setting.GetTranscription()),
-		Chat:          convertChatConfigFromStore(setting.GetChat()),
+		Providers:        make([]*v1pb.InstanceSetting_AIProviderConfig, 0, len(setting.Providers)),
+		Transcription:    convertTranscriptionConfigFromStore(setting.GetTranscription()),
+		Chat:             convertChatConfigFromStore(setting.GetChat()),
+		SemanticAnalysis: convertSemanticAnalysisConfigFromStore(setting.GetSemanticAnalysis()),
 	}
 	for _, provider := range setting.Providers {
 		if provider == nil {
@@ -395,9 +396,10 @@ func convertInstanceAISettingToStore(setting *v1pb.InstanceSetting_AISetting) *s
 	}
 
 	aiSetting := &storepb.InstanceAISetting{
-		Providers:     make([]*storepb.AIProviderConfig, 0, len(setting.Providers)),
-		Transcription: convertTranscriptionConfigToStore(setting.GetTranscription()),
-		Chat:          convertChatConfigToStore(setting.GetChat()),
+		Providers:        make([]*storepb.AIProviderConfig, 0, len(setting.Providers)),
+		Transcription:    convertTranscriptionConfigToStore(setting.GetTranscription()),
+		Chat:             convertChatConfigToStore(setting.GetChat()),
+		SemanticAnalysis: convertSemanticAnalysisConfigToStore(setting.GetSemanticAnalysis()),
 	}
 	for _, provider := range setting.Providers {
 		if provider == nil {
@@ -460,4 +462,18 @@ func convertChatConfigToStore(setting *v1pb.InstanceSetting_ChatConfig) *storepb
 		ContextBudgetTokens: setting.GetContextBudgetTokens(),
 		MaxCompletionTokens: setting.GetMaxCompletionTokens(),
 	}
+}
+
+func convertSemanticAnalysisConfigFromStore(setting *storepb.SemanticAnalysisConfig) *v1pb.InstanceSetting_SemanticAnalysisConfig {
+	if setting == nil {
+		return nil
+	}
+	return &v1pb.InstanceSetting_SemanticAnalysisConfig{ProviderId: setting.GetProviderId()}
+}
+
+func convertSemanticAnalysisConfigToStore(setting *v1pb.InstanceSetting_SemanticAnalysisConfig) *storepb.SemanticAnalysisConfig {
+	if setting == nil {
+		return nil
+	}
+	return &storepb.SemanticAnalysisConfig{ProviderId: setting.GetProviderId()}
 }

@@ -43,6 +43,9 @@ const (
 	AIServiceEstimateChatContextProcedure = "/memos.api.v1.AIService/EstimateChatContext"
 	// AIServiceChatProcedure is the fully-qualified name of the AIService's Chat RPC.
 	AIServiceChatProcedure = "/memos.api.v1.AIService/Chat"
+	// AIServiceAnalyzeMemoSemanticProcedure is the fully-qualified name of the AIService's
+	// AnalyzeMemoSemantic RPC.
+	AIServiceAnalyzeMemoSemanticProcedure = "/memos.api.v1.AIService/AnalyzeMemoSemantic"
 )
 
 // AIServiceClient is a client for the memos.api.v1.AIService service.
@@ -61,6 +64,8 @@ type AIServiceClient interface {
 	// resends the whole conversation each turn; the server keeps no chat state.
 	// The model may propose note changes, but this method never writes a memo.
 	Chat(context.Context, *connect.Request[v1.ChatRequest]) (*connect.Response[v1.ChatResponse], error)
+	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
+	AnalyzeMemoSemantic(context.Context, *connect.Request[v1.AnalyzeMemoSemanticRequest]) (*connect.Response[v1.AnalyzeMemoSemanticResponse], error)
 }
 
 // NewAIServiceClient constructs a client for the memos.api.v1.AIService service. By default, it
@@ -98,6 +103,12 @@ func NewAIServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(aIServiceMethods.ByName("Chat")),
 			connect.WithClientOptions(opts...),
 		),
+		analyzeMemoSemantic: connect.NewClient[v1.AnalyzeMemoSemanticRequest, v1.AnalyzeMemoSemanticResponse](
+			httpClient,
+			baseURL+AIServiceAnalyzeMemoSemanticProcedure,
+			connect.WithSchema(aIServiceMethods.ByName("AnalyzeMemoSemantic")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -107,6 +118,7 @@ type aIServiceClient struct {
 	listProviderModels  *connect.Client[v1.ListProviderModelsRequest, v1.ListProviderModelsResponse]
 	estimateChatContext *connect.Client[v1.EstimateChatContextRequest, v1.EstimateChatContextResponse]
 	chat                *connect.Client[v1.ChatRequest, v1.ChatResponse]
+	analyzeMemoSemantic *connect.Client[v1.AnalyzeMemoSemanticRequest, v1.AnalyzeMemoSemanticResponse]
 }
 
 // Transcribe calls memos.api.v1.AIService.Transcribe.
@@ -129,6 +141,11 @@ func (c *aIServiceClient) Chat(ctx context.Context, req *connect.Request[v1.Chat
 	return c.chat.CallUnary(ctx, req)
 }
 
+// AnalyzeMemoSemantic calls memos.api.v1.AIService.AnalyzeMemoSemantic.
+func (c *aIServiceClient) AnalyzeMemoSemantic(ctx context.Context, req *connect.Request[v1.AnalyzeMemoSemanticRequest]) (*connect.Response[v1.AnalyzeMemoSemanticResponse], error) {
+	return c.analyzeMemoSemantic.CallUnary(ctx, req)
+}
+
 // AIServiceHandler is an implementation of the memos.api.v1.AIService service.
 type AIServiceHandler interface {
 	// Transcribe transcribes an audio file using an instance AI provider.
@@ -145,6 +162,8 @@ type AIServiceHandler interface {
 	// resends the whole conversation each turn; the server keeps no chat state.
 	// The model may propose note changes, but this method never writes a memo.
 	Chat(context.Context, *connect.Request[v1.ChatRequest]) (*connect.Response[v1.ChatResponse], error)
+	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
+	AnalyzeMemoSemantic(context.Context, *connect.Request[v1.AnalyzeMemoSemanticRequest]) (*connect.Response[v1.AnalyzeMemoSemanticResponse], error)
 }
 
 // NewAIServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -178,6 +197,12 @@ func NewAIServiceHandler(svc AIServiceHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(aIServiceMethods.ByName("Chat")),
 		connect.WithHandlerOptions(opts...),
 	)
+	aIServiceAnalyzeMemoSemanticHandler := connect.NewUnaryHandler(
+		AIServiceAnalyzeMemoSemanticProcedure,
+		svc.AnalyzeMemoSemantic,
+		connect.WithSchema(aIServiceMethods.ByName("AnalyzeMemoSemantic")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/memos.api.v1.AIService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AIServiceTranscribeProcedure:
@@ -188,6 +213,8 @@ func NewAIServiceHandler(svc AIServiceHandler, opts ...connect.HandlerOption) (s
 			aIServiceEstimateChatContextHandler.ServeHTTP(w, r)
 		case AIServiceChatProcedure:
 			aIServiceChatHandler.ServeHTTP(w, r)
+		case AIServiceAnalyzeMemoSemanticProcedure:
+			aIServiceAnalyzeMemoSemanticHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -211,4 +238,8 @@ func (UnimplementedAIServiceHandler) EstimateChatContext(context.Context, *conne
 
 func (UnimplementedAIServiceHandler) Chat(context.Context, *connect.Request[v1.ChatRequest]) (*connect.Response[v1.ChatResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.AIService.Chat is not implemented"))
+}
+
+func (UnimplementedAIServiceHandler) AnalyzeMemoSemantic(context.Context, *connect.Request[v1.AnalyzeMemoSemanticRequest]) (*connect.Response[v1.AnalyzeMemoSemanticResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.AIService.AnalyzeMemoSemantic is not implemented"))
 }
