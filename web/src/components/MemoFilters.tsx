@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { isEqual } from "lodash-es";
 import {
-  BookmarkIcon,
+  PinIcon,
   CalendarIcon,
   CheckCircleIcon,
   CodeIcon,
@@ -61,7 +61,7 @@ const FILTER_CONFIGS: Record<FilterFactor, FilterConfig> = {
     },
   },
   pinned: {
-    icon: BookmarkIcon,
+    icon: PinIcon,
     getLabel: (value) => value,
   },
   "property.hasLink": {

@@ -1,4 +1,4 @@
-import { BookmarkIcon } from "lucide-react";
+import { PinIcon } from "lucide-react";
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import RelativeTime from "@/components/RelativeTime";
@@ -103,13 +103,13 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ timeDisplay = "relative", showC
         {showPinned && memo.pinned && (
           <TooltipProvider>
             <Tooltip>
-              {/* The pinned mark keeps its primary ink; that custom look lives on the raw trigger, not a kit button. */}
+              {/* A filled red pin reads as "pinned" at a glance; unpin on click. */}
               <TooltipTrigger
                 aria-label={t("common.unpin")}
-                className={cn(MEMO_HEADER_ACTION_CLASSES, "text-primary hover:text-primary")}
+                className={cn(MEMO_HEADER_ACTION_CLASSES, "text-red-400 hover:text-red-500")}
                 onClick={unpinMemo}
               >
-                <BookmarkIcon className="size-4" strokeWidth={1.8} />
+                <PinIcon className="size-4 fill-current" strokeWidth={1.8} />
               </TooltipTrigger>
               <TooltipContent>
                 <p>{t("common.unpin")}</p>
