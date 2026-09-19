@@ -1,4 +1,16 @@
-import { CheckIcon, FlameIcon, Link2Icon, PencilIcon, RotateCcwIcon, SparklesIcon, TargetIcon, TrophyIcon, ZapIcon } from "lucide-react";
+import {
+  CheckIcon,
+  FlameIcon,
+  Link2Icon,
+  MinusIcon,
+  PencilIcon,
+  RotateCcwIcon,
+  SparklesIcon,
+  TargetIcon,
+  TrophyIcon,
+  XIcon,
+  ZapIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
@@ -226,14 +238,22 @@ const HabitMomentumDashboard = ({ summary, today, saving, onLog, onUndo, onEdit 
                 className={cn(
                   "aspect-square rounded-xl border",
                   day.targetMet
-                    ? "border-primary/60 bg-primary shadow-sm"
+                    ? "flex items-center justify-center border-primary/60 bg-primary text-primary-foreground shadow-sm"
                     : day.successful
-                      ? "border-success/60 bg-success"
+                      ? "flex items-center justify-center border-success/60 bg-success text-success-foreground"
                       : day.recorded
-                        ? "border-destructive/30 bg-destructive/10"
+                        ? "flex items-center justify-center border-destructive/30 bg-destructive/10 text-muted-foreground"
                         : "border-border bg-muted/40",
                 )}
-              />
+              >
+                {day.targetMet ? (
+                  <FlameIcon className="size-6" strokeWidth={2.75} />
+                ) : day.successful ? (
+                  <MinusIcon className="size-4" />
+                ) : day.recorded ? (
+                  <XIcon className="size-4" />
+                ) : null}
+              </div>
             ))}
           </div>
           <p className="mt-4 text-sm text-muted-foreground">
