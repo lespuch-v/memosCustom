@@ -31,6 +31,8 @@ import {
   InstanceSetting_ChatConfig,
   InstanceSetting_ChatConfigSchema,
   InstanceSetting_Key,
+  InstanceSetting_SemanticAnalysisConfig,
+  InstanceSetting_SemanticAnalysisConfigSchema,
   InstanceSetting_TranscriptionConfig,
   InstanceSetting_TranscriptionConfigSchema,
   InstanceSettingSchema,
@@ -68,6 +70,10 @@ type LocalChat = {
   maxCompletionTokens: string;
 };
 
+type LocalSemanticAnalysis = {
+  providerId: string;
+};
+
 const providerTypeSelectOptions = AI_PROVIDER_TYPE_OPTIONS.map((type) => ({ value: String(type), label: getProviderTypeLabel(type) }));
 
 const byokNotes = ["setting.ai.byok-key-note", "setting.ai.byok-storage-note", "setting.ai.byok-model-note"] as const;
@@ -94,6 +100,10 @@ const toLocalChat = (config: InstanceSetting_ChatConfig | undefined): LocalChat 
   model: config?.model ?? "",
   contextBudgetTokens: config?.contextBudgetTokens ? String(config.contextBudgetTokens) : "",
   maxCompletionTokens: config?.maxCompletionTokens ? String(config.maxCompletionTokens) : "",
+});
+
+const toLocalSemanticAnalysis = (config: InstanceSetting_SemanticAnalysisConfig | undefined): LocalSemanticAnalysis => ({
+  providerId: config?.providerId ?? "",
 });
 
 /** Parses a token-count input into a non-negative int64 value. */
@@ -137,6 +147,9 @@ const toChatConfig = (chat: LocalChat) =>
     maxCompletionTokens: parseTokenCount(chat.maxCompletionTokens),
   });
 
+const toSemanticAnalysisConfig = (semanticAnalysis: LocalSemanticAnalysis) =>
+  create(InstanceSetting_SemanticAnalysisConfigSchema, { providerId: semanticAnalysis.providerId });
+
 const AISection = () => {
   const t = useTranslate();
   const saveInstanceSetting = useInstanceSettingUpdater();
@@ -144,6 +157,9 @@ const AISection = () => {
   const [providers, setProviders] = useState<LocalAIProvider[]>(() => originalSetting.providers.map(toLocalProvider));
   const [transcription, setTranscription] = useState<LocalTranscription>(() => toLocalTranscription(originalSetting.transcription));
   const [chat, setChat] = useState<LocalChat>(() => toLocalChat(originalSetting.chat));
+  const [semanticAnalysis, setSemanticAnalysis] = useState<LocalSemanticAnalysis>(() =>
+    toLocalSemanticAnalysis(originalSetting.semanticAnalysis),
+  );
   const [editingProvider, setEditingProvider] = useState<LocalAIProvider | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<LocalAIProvider | undefined>();
 
@@ -174,11 +190,26 @@ const AISection = () => {
     }
   }, [originalSetting.chat]);
 
+  const lastSyncedSemanticAnalysis = useRef<LocalSemanticAnalysis>(toLocalSemanticAnalysis(originalSetting.semanticAnalysis));
+  useEffect(() => {
+    const next = toLocalSemanticAnalysis(originalSetting.semanticAnalysis);
+    if (!isEqual(lastSyncedSemanticAnalysis.current, next)) {
+      setSemanticAnalysis(next);
+      lastSyncedSemanticAnalysis.current = next;
+    }
+  }, [originalSetting.semanticAnalysis]);
+
   const originalTranscription = useMemo(() => toLocalTranscription(originalSetting.transcription), [originalSetting.transcription]);
   const transcriptionHasChanges = !isEqual(transcription, originalTranscription);
 
   const originalChat = useMemo(() => toLocalChat(originalSetting.chat), [originalSetting.chat]);
   const chatHasChanges = !isEqual(chat, originalChat);
+
+  const originalSemanticAnalysis = useMemo(
+    () => toLocalSemanticAnalysis(originalSetting.semanticAnalysis),
+    [originalSetting.semanticAnalysis],
+  );
+  const semanticAnalysisHasChanges = !isEqual(semanticAnalysis, originalSemanticAnalysis);
 
   const transcriptionProviderRef = useMemo(
     () => providers.find((provider) => provider.id === transcription.providerId),
@@ -192,6 +223,7 @@ const AISection = () => {
     nextProviders: LocalAIProvider[],
     nextTranscription: InstanceSetting_TranscriptionConfig | undefined,
     nextChat: InstanceSetting_ChatConfig | undefined,
+    nextSemanticAnalysis: InstanceSetting_SemanticAnalysisConfig | undefined,
     errorContext: string,
   ) => {
     return saveInstanceSetting({
@@ -204,6 +236,7 @@ const AISection = () => {
             providers: nextProviders.map(toProviderConfig),
             transcription: nextTranscription,
             chat: nextChat,
+            semanticAnalysis: nextSemanticAnalysis,
           }),
         },
       }),
@@ -238,7 +271,13 @@ const AISection = () => {
       ? providers.map((item) => (item.id === normalizedProvider.id ? normalizedProvider : item))
       : [...providers, normalizedProvider];
 
-    const ok = await persistAISetting(nextProviders, originalSetting.transcription, originalSetting.chat, "Update AI provider");
+    const ok = await persistAISetting(
+      nextProviders,
+      originalSetting.transcription,
+      originalSetting.chat,
+      originalSetting.semanticAnalysis,
+      "Update AI provider",
+    );
     if (!ok) return;
     setProviders(nextProviders);
     setEditingProvider(undefined);
@@ -261,7 +300,13 @@ const AISection = () => {
     const persistedChat = originalSetting.chat;
     const nextChat = persistedChat && persistedChat.providerId === target.id ? create(InstanceSetting_ChatConfigSchema, {}) : persistedChat;
 
-    const ok = await persistAISetting(nextProviders, nextTranscription, nextChat, "Delete AI provider");
+    const persistedSemanticAnalysis = originalSetting.semanticAnalysis;
+    const nextSemanticAnalysis =
+      persistedSemanticAnalysis && persistedSemanticAnalysis.providerId === target.id
+        ? create(InstanceSetting_SemanticAnalysisConfigSchema, {})
+        : persistedSemanticAnalysis;
+
+    const ok = await persistAISetting(nextProviders, nextTranscription, nextChat, nextSemanticAnalysis, "Delete AI provider");
     if (!ok) return;
     setProviders(nextProviders);
     if (transcription.providerId === target.id) {
@@ -269,6 +314,9 @@ const AISection = () => {
     }
     if (chat.providerId === target.id) {
       setChat((prev) => ({ ...prev, providerId: "" }));
+    }
+    if (semanticAnalysis.providerId === target.id) {
+      setSemanticAnalysis({ providerId: "" });
     }
     setDeleteTarget(undefined);
   };
@@ -278,7 +326,13 @@ const AISection = () => {
       toast.error(t("setting.ai.transcription-empty-providers"));
       return;
     }
-    await persistAISetting(providers, toTranscriptionConfig(transcription), originalSetting.chat, "Update transcription");
+    await persistAISetting(
+      providers,
+      toTranscriptionConfig(transcription),
+      originalSetting.chat,
+      originalSetting.semanticAnalysis,
+      "Update transcription",
+    );
   };
 
   const handleSaveChat = async () => {
@@ -286,7 +340,23 @@ const AISection = () => {
       toast.error(t("setting.ai.transcription-empty-providers"));
       return;
     }
-    await persistAISetting(providers, originalSetting.transcription, toChatConfig(chat), "Update chat");
+    await persistAISetting(
+      providers,
+      originalSetting.transcription,
+      toChatConfig(chat),
+      originalSetting.semanticAnalysis,
+      "Update chat",
+    );
+  };
+
+  const handleSaveSemanticAnalysis = async () => {
+    await persistAISetting(
+      providers,
+      originalSetting.transcription,
+      originalSetting.chat,
+      toSemanticAnalysisConfig(semanticAnalysis),
+      "Update semantic analysis",
+    );
   };
 
   return (
@@ -407,6 +477,19 @@ const AISection = () => {
         <ChatForm providers={providers} chat={chat} onChange={setChat} />
       </SettingGroup>
 
+      <SettingGroup
+        title={t("setting.ai.semantic-analysis-title")}
+        description={t("setting.ai.semantic-analysis-description")}
+        showSeparator
+        actions={
+          <Button disabled={!semanticAnalysisHasChanges} onClick={handleSaveSemanticAnalysis}>
+            {t("common.save")}
+          </Button>
+        }
+      >
+        <SemanticAnalysisForm providers={providers} semanticAnalysis={semanticAnalysis} onChange={setSemanticAnalysis} />
+      </SettingGroup>
+
       <AIProviderDialog
         provider={editingProvider}
         onOpenChange={(open) => !open && setEditingProvider(undefined)}
@@ -423,6 +506,52 @@ const AISection = () => {
         confirmVariant="destructive"
       />
     </SettingSection>
+  );
+};
+
+interface SemanticAnalysisFormProps {
+  providers: LocalAIProvider[];
+  semanticAnalysis: LocalSemanticAnalysis;
+  onChange: (next: LocalSemanticAnalysis) => void;
+}
+
+const SemanticAnalysisForm = ({ providers, semanticAnalysis, onChange }: SemanticAnalysisFormProps) => {
+  const t = useTranslate();
+  const openRouterProviders = useMemo(
+    () => providers.filter((provider) => provider.type === InstanceSetting_AIProviderType.OPENROUTER),
+    [providers],
+  );
+  const providerOptions = [
+    { value: "__none__", label: t("setting.ai.semantic-analysis-no-provider") },
+    ...openRouterProviders.map((provider) => ({ value: provider.id, label: provider.title || provider.id })),
+  ];
+
+  return (
+    <div className="max-w-3xl space-y-2">
+      <Label>{t("setting.ai.semantic-analysis-provider")}</Label>
+      <Select
+        value={semanticAnalysis.providerId || "__none__"}
+        items={providerOptions}
+        onValueChange={(value) => onChange({ providerId: value === "__none__" ? "" : value })}
+        disabled={openRouterProviders.length === 0}
+      >
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {providerOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">
+        {openRouterProviders.length === 0
+          ? t("setting.ai.semantic-analysis-empty-providers")
+          : t("setting.ai.semantic-analysis-model-help")}
+      </p>
+    </div>
   );
 };
 
