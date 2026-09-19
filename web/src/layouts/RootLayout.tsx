@@ -72,7 +72,7 @@ const RootLayoutContent = () => {
   }, [pathname, searchParams, removeFilter]);
 
   useEffect(() => {
-    if (currentUser) void fetchSetting(InstanceSetting_Key.AI);
+    if (currentUser) void fetchSetting?.(InstanceSetting_Key.AI);
   }, [currentUser, fetchSetting]);
 
   // Anonymous visitors to private instances may only reach share links. Treat an

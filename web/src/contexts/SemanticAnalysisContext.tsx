@@ -86,8 +86,8 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
   }, [analyze, memo]);
 
   const value = useMemo(
-    () => ({ enabled: !!aiSetting.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, close, refresh, triggerRef }),
-    [aiSetting.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, close, refresh],
+    () => ({ enabled: !!aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, close, refresh, triggerRef }),
+    [aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, close, refresh],
   );
   return <SemanticAnalysisContext.Provider value={value}>{children}</SemanticAnalysisContext.Provider>;
 };

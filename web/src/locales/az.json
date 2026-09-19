@@ -1,4 +1,20 @@
 {
+  "semantic-analysis": {
+    "actionable": "Actionable",
+    "analyze-again": "Analyze again",
+    "ephemeral": "A private, on-demand reading. These results are not saved.",
+    "error": "Semantic analysis could not be completed.",
+    "idea": "Idea",
+    "journal": "Journal",
+    "loading": "Reading this note…",
+    "open": "Inspect semantics",
+    "reference": "Reference",
+    "retry": "Try again",
+    "revisit": "Worth revisiting",
+    "task": "Task",
+    "technical": "Technical / software",
+    "title": "Semantic analysis"
+  },
   "ai": {
     "composer-hint": "Enter göndərir. Shift+Enter yeni sətir əlavə edir.",
     "composer-placeholder": "Qeydləriniz haqqında soruşun və ya yeni qeyd yazmağı xahiş edin…",
@@ -759,6 +775,12 @@
       "provider-title-required": "Provayder adı tələb olunur.",
       "provider-type": "Provayder növü",
       "providers": "Provayderlər",
+      "semantic-analysis-description": "Choose the OpenRouter integration used for on-demand Jev judgments on a memo. Results are not stored.",
+      "semantic-analysis-empty-providers": "Add an OpenRouter integration first to enable semantic analysis.",
+      "semantic-analysis-model-help": "Uses the fixed ~typesafe/jev-latest model through OpenRouter.",
+      "semantic-analysis-no-provider": "None — semantic analysis disabled",
+      "semantic-analysis-provider": "OpenRouter provider",
+      "semantic-analysis-title": "Semantic analysis",
       "transcription-description": "Qeyd redaktorunda audio yazılarkən istifadə olunan nitqdən mətnə çevirmə parametrləri.",
       "transcription-empty-providers": "Transkripsiyanı aktivləşdirmək üçün əvvəlcə AI inteqrasiyası əlavə edin.",
       "transcription-language-help": "ISO 639-1 qısa kodu (məsələn, en, de, zh). Avtomatik təyin üçün boş buraxın.",
