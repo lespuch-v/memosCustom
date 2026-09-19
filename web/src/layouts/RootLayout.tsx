@@ -16,7 +16,7 @@ import { GlobalMemoEditorProvider } from "@/contexts/GlobalMemoEditorContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { MemoFilterProvider, useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { SpaceProvider } from "@/contexts/SpaceContext";
-import { SemanticAnalysisProvider } from "@/contexts/SemanticAnalysisContext";
+import { SemanticAnalysisProvider, useSemanticAnalysis } from "@/contexts/SemanticAnalysisContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
@@ -50,6 +50,7 @@ const RootLayoutContent = () => {
   const md = useMediaQuery("md");
   const { profile, fetchSetting } = useInstance();
   const { removeFilter } = useMemoFilterContext();
+  const { open: semanticInspectorOpen } = useSemanticAnalysis();
   const { pathname } = location;
   // Routes that scroll inside themselves rather than with the document: the map
   // fills the viewport, and the AI Hub is a chat shell whose thread and context
@@ -108,7 +109,7 @@ const RootLayoutContent = () => {
       )}
       <MobileAppSidebar />
       <main
-        className={cn("flex w-full min-w-0 flex-col items-center md:ps-(--app-sidebar-width)", fullBleed ? "h-full min-h-0" : "min-h-full")}
+        className={cn("flex w-full min-w-0 flex-col items-center transition-[padding] md:ps-(--app-sidebar-width)", semanticInspectorOpen && "xl:pe-[344px]", fullBleed ? "h-full min-h-0" : "min-h-full")}
       >
         <MobileAppHeader />
         {profile.demo && <DemoBanner />}

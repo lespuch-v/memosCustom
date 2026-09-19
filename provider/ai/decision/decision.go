@@ -3,8 +3,11 @@ package decision
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const defaultHTTPTimeout = 3 * time.Minute
@@ -27,6 +30,24 @@ type Request struct {
 type NoulAnswer struct {
 	Type string  `json:"type"`
 	Noul float64 `json:"noul"`
+}
+
+// UnmarshalJSON rejects incomplete answers instead of interpreting an absent or
+// null probability as a confident zero.
+func (answer *NoulAnswer) UnmarshalJSON(data []byte) error {
+	var decoded struct {
+		Type string   `json:"type"`
+		Noul *float64 `json:"noul"`
+	}
+	if err := json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	if decoded.Noul == nil {
+		return errors.New("noul probability is required")
+	}
+	answer.Type = decoded.Type
+	answer.Noul = *decoded.Noul
+	return nil
 }
 
 // Result is a structured provider response keyed by the caller's question IDs.

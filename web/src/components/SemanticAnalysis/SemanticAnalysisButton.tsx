@@ -1,5 +1,5 @@
 import { SparklesIcon } from "lucide-react";
-import type { MouseEvent } from "react";
+import { type MouseEvent, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useOptionalSemanticAnalysis } from "@/contexts/SemanticAnalysisContext";
@@ -9,6 +9,9 @@ import { useTranslate } from "@/utils/i18n";
 const SemanticAnalysisButton = ({ memo }: { memo: Memo }) => {
   const t = useTranslate();
   const analysis = useOptionalSemanticAnalysis();
+  useEffect(() => {
+    if (analysis?.enabled) analysis.syncMemo(memo);
+  }, [analysis, memo]);
   if (!analysis?.enabled) return null;
   const { openForMemo } = analysis;
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => openForMemo(memo, event.currentTarget);

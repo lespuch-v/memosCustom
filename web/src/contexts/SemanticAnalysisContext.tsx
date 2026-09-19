@@ -16,6 +16,7 @@ interface SemanticAnalysisContextValue {
   status: AnalysisState;
   error?: string;
   openForMemo: (memo: Memo, trigger?: HTMLElement) => void;
+  syncMemo: (memo: Memo) => void;
   close: () => void;
   refresh: () => void;
   triggerRef: RefObject<HTMLElement | null>;
@@ -23,7 +24,7 @@ interface SemanticAnalysisContextValue {
 
 const SemanticAnalysisContext = createContext<SemanticAnalysisContextValue | null>(null);
 
-const revisionKey = (memo: Memo) => `${memo.name}:${memo.updateTime?.seconds ?? 0}:${memo.updateTime?.nanos ?? 0}`;
+const revisionKey = (memo: Memo) => `${memo.name}:${memo.updateTime?.seconds ?? 0}:${memo.updateTime?.nanos ?? 0}:${memo.content}`;
 
 export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) => {
   const { aiSetting } = useInstance();
@@ -47,7 +48,7 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
       return;
     }
     setStatus("loading");
-    setResult(undefined);
+    if (!bypassCache) setResult(undefined);
     setError(undefined);
     try {
       const response = await aiServiceClient.analyzeMemoSemantic({ memo: target.name });
@@ -81,13 +82,22 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
     window.setTimeout(() => triggerRef.current?.focus(), 0);
   }, []);
 
+  const syncMemo = useCallback(
+    (updated: Memo) => {
+      if (!open || memo?.name !== updated.name || revisionKey(memo) === revisionKey(updated)) return;
+      setMemo(updated);
+      void analyze(updated);
+    },
+    [analyze, memo, open],
+  );
+
   const refresh = useCallback(() => {
     if (memo) void analyze(memo, true);
   }, [analyze, memo]);
 
   const value = useMemo(
-    () => ({ enabled: !!aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, close, refresh, triggerRef }),
-    [aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, close, refresh],
+    () => ({ enabled: !!aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, syncMemo, close, refresh, triggerRef }),
+    [aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, syncMemo, close, refresh],
   );
   return <SemanticAnalysisContext.Provider value={value}>{children}</SemanticAnalysisContext.Provider>;
 };

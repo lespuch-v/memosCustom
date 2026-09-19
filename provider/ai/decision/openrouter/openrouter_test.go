@@ -70,6 +70,8 @@ func TestEvaluateRejectsInvalidResponses(t *testing.T) {
 		{name: "missing answers", status: http.StatusOK, body: `{"model":"jev"}`},
 		{name: "missing requested answer", status: http.StatusOK, body: `{"model":"jev","answers":{"other":{"type":"noul","noul":0.5}}}`},
 		{name: "wrong answer type", status: http.StatusOK, body: `{"model":"jev","answers":{"is_actionable":{"type":"choice","noul":0.5}}}`},
+		{name: "missing probability", status: http.StatusOK, body: `{"model":"jev","answers":{"is_actionable":{"type":"noul"}}}`},
+		{name: "null probability", status: http.StatusOK, body: `{"model":"jev","answers":{"is_actionable":{"type":"noul","noul":null}}}`},
 		{name: "negative probability", status: http.StatusOK, body: `{"model":"jev","answers":{"is_actionable":{"type":"noul","noul":-0.01}}}`},
 		{name: "probability over one", status: http.StatusOK, body: `{"model":"jev","answers":{"is_actionable":{"type":"noul","noul":1.01}}}`},
 		{name: "infinite probability", status: http.StatusOK, body: `{"model":"jev","answers":{"is_actionable":{"type":"noul","noul":1e999}}}`},
