@@ -1,8 +1,8 @@
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
-  BookmarkMinusIcon,
-  BookmarkPlusIcon,
+  PinIcon,
+  PinOffIcon,
   CheckCheckIcon,
   CopyIcon,
   Edit3Icon,
@@ -77,7 +77,7 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
           <>
             {!isComment && (
               <DropdownMenuItem onClick={handleTogglePinMemoBtnClick}>
-                {memo.pinned ? <BookmarkMinusIcon /> : <BookmarkPlusIcon />}
+                {memo.pinned ? <PinOffIcon /> : <PinIcon />}
                 {memo.pinned ? t("common.unpin") : t("common.pin")}
               </DropdownMenuItem>
             )}
