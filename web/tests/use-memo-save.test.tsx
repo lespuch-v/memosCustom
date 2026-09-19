@@ -1,8 +1,10 @@
+import { create } from "@bufbuild/protobuf";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useMemoSave } from "@/components/MemoEditor/hooks/useMemoSave";
+import { ListMemoCommentsResponseSchema, MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
 
 const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
@@ -40,6 +42,7 @@ vi.mock("@/utils/i18n", () => ({
 
 describe("useMemoSave", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     mocks.dispatch.mockReset();
     mocks.markNewMemo.mockReset();
     mocks.memoSave.mockReset();
@@ -61,7 +64,8 @@ describe("useMemoSave", () => {
   });
 
   it("refreshes the parent memo total after creating a comment", async () => {
-    mocks.memoSave.mockResolvedValue({ hasChanges: true, memoName: "memos/comment" });
+    const comment = create(MemoSchema, { name: "memos/comment", parent: "memos/parent" });
+    mocks.memoSave.mockResolvedValue({ hasChanges: true, memoName: comment.name, memo: comment });
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
     const wrapper = ({ children }: PropsWithChildren) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
@@ -71,6 +75,40 @@ describe("useMemoSave", () => {
 
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["memos", "comments", "memos/parent"] });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["memos", "detail", "memos/parent"] });
+  });
+
+  it("closes a comment editor and caches the comment without waiting for the saved confirmation", async () => {
+    vi.useFakeTimers();
+    const comment = create(MemoSchema, {
+      name: "memos/comment",
+      parent: "memos/parent",
+      content: "New comment",
+    });
+    mocks.memoSave.mockResolvedValue({ hasChanges: true, memoName: comment.name, memo: comment });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const commentsKey = ["memos", "comments", "memos/parent", "infinite", 20];
+    queryClient.setQueryData(commentsKey, {
+      pages: [create(ListMemoCommentsResponseSchema)],
+      pageParams: [""],
+    });
+    const wrapper = ({ children }: PropsWithChildren) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    const onConfirm = vi.fn();
+    const { result } = renderHook(() => useMemoSave({ parentMemoName: "memos/parent", discardDraft: vi.fn(), onConfirm }), { wrapper });
+
+    let savePromise: Promise<void> | undefined;
+    await act(async () => {
+      savePromise = result.current();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(onConfirm).toHaveBeenCalledWith(comment.name);
+    expect(queryClient.getQueryData<{ pages: { memos: unknown[] }[] }>(commentsKey)?.pages[0]?.memos).toEqual([comment]);
+
+    await act(async () => {
+      vi.runAllTimers();
+      await savePromise;
+    });
   });
 
   it("holds a saved confirmation before a closing host resets", async () => {

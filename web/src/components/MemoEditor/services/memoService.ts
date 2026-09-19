@@ -84,7 +84,7 @@ export const memoService = {
       parentMemoName?: string;
       space?: string;
     },
-  ): Promise<{ memoName: string; hasChanges: boolean }> {
+  ): Promise<{ memoName: string; hasChanges: boolean; memo?: Memo }> {
     // 1. Upload local files first
     const newAttachments = await uploadService.uploadFiles(state.localFiles);
     const allAttachments = [...state.metadata.attachments, ...newAttachments];
@@ -102,7 +102,7 @@ export const memoService = {
         memo: create(MemoSchema, patch as Record<string, unknown>),
         updateMask: create(FieldMaskSchema, { paths: Array.from(mask) }),
       });
-      return { memoName: memo.name, hasChanges: true };
+      return { memoName: memo.name, hasChanges: true, memo };
     }
 
     // 3. Create new memo or comment
@@ -124,7 +124,7 @@ export const memoService = {
         })
       : await memoServiceClient.createMemo({ memo: memoData });
 
-    return { memoName: memo.name, hasChanges: true };
+    return { memoName: memo.name, hasChanges: true, memo };
   },
 
   /**
