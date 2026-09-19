@@ -1,18 +1,22 @@
-import { FlameIcon, PlusIcon, Volume2Icon, VolumeXIcon } from "lucide-react";
+import { ArrowLeftIcon, FlameIcon, PlusIcon, Volume2Icon, VolumeXIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
+import { useSearchParams } from "react-router-dom";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import HabitCelebrationOverlay from "@/components/Habits/HabitCelebrationOverlay";
+import HabitCoachDashboard from "@/components/Habits/HabitCoachDashboard";
 import HabitFormDialog from "@/components/Habits/HabitFormDialog";
 import HabitMomentumDashboard from "@/components/Habits/HabitMomentumDashboard";
 import { classifyHabitReward, type HabitCelebrationEvent } from "@/components/Habits/habitCelebration";
 import { playHabitSound, prepareHabitAudio, stopHabitSounds } from "@/components/Habits/habitSounds";
 import { Button } from "@/components/ui/button";
+import { habitServiceClient } from "@/connect";
 import {
   type HabitDraft,
   useCreateHabit,
   useDeleteHabit,
   useDeleteHabitLog,
+  useHabitSummaries,
   useHabitSummary,
   useHabits,
   useUpdateHabit,
@@ -27,7 +31,13 @@ const HABIT_SOUND_STORAGE_KEY = "memos.habits.sound-enabled.v1";
 const Habits = () => {
   const date = today();
   const { data: habits = [], isLoading, isError, refetch } = useHabits();
-  const [selectedName, setSelectedName] = useState<string>();
+  const summaryQueries = useHabitSummaries(habits, date, 30);
+  const coachSummaries = summaryQueries.flatMap((query) => (query.data ? [query.data] : []));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedName = searchParams.get("habit") ?? undefined;
+  const selectedName = requestedName && habits.some((habit) => habit.name === requestedName) ? requestedName : habits[0]?.name;
+  const view = requestedName && selectedName === requestedName ? "detail" : "overview";
+  const [savingNames, setSavingNames] = useState<Set<string>>(new Set());
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -35,9 +45,8 @@ const Habits = () => {
   const [celebration, setCelebration] = useState<HabitCelebrationEvent | null>(null);
   const celebrationReturnFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    if (!selectedName && habits[0]) setSelectedName(habits[0].name);
-    else if (selectedName && !habits.some((habit) => habit.name === selectedName)) setSelectedName(habits[0]?.name);
-  }, [habits, selectedName]);
+    if (!isLoading && requestedName && !habits.some((habit) => habit.name === requestedName)) setSearchParams({}, { replace: true });
+  }, [habits, isLoading, requestedName, setSearchParams]);
   const selected = habits.find((habit) => habit.name === selectedName);
   const scheduled = Boolean(selected && selected.startDate > date);
   const {
@@ -62,7 +71,7 @@ const Habits = () => {
       await updateHabit.mutateAsync({ name: selected.name, draft });
     } else {
       const created = await createHabit.mutateAsync(draft);
-      setSelectedName(created.name);
+      setSearchParams({ habit: created.name });
     }
     setEditing(false);
   };
@@ -99,6 +108,53 @@ const Habits = () => {
     }
     if (soundEnabled) void playHabitSound(event.tier);
   };
+  const saveCoachTarget = async (coachSummary: HabitSummary) => {
+    const habit = coachSummary.habit;
+    if (!habit) return;
+    setSavingNames((current) => new Set(current).add(habit.name));
+    const wasRecorded = Boolean(coachSummary.recentDays.find((day) => day.date === date)?.recorded);
+    celebrationReturnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setCelebration(null);
+    stopHabitSounds();
+    if (soundEnabled && !wasRecorded) void prepareHabitAudio();
+    try {
+      await saveLog.mutateAsync({ parent: habit.name, logDate: date, value: habit.targetValue });
+      let after: HabitSummary;
+      try {
+        after = await habitServiceClient.getHabitSummary({ name: habit.name, asOfDate: date, days: 30 });
+      } catch {
+        toast("Progress saved, but the latest score could not be loaded");
+        return;
+      }
+      const event = classifyHabitReward({ before: coachSummary, after, value: habit.targetValue, wasRecorded });
+      setCelebration(event);
+      if (event && soundEnabled) void playHabitSound(event.tier);
+    } catch {
+      toast.error("Could not save today's progress");
+    } finally {
+      setSavingNames((current) => {
+        const next = new Set(current);
+        next.delete(habit.name);
+        return next;
+      });
+    }
+  };
+  const undoCoachLog = async (coachSummary: HabitSummary) => {
+    const habit = coachSummary.habit;
+    if (!habit) return;
+    setSavingNames((current) => new Set(current).add(habit.name));
+    try {
+      await deleteLog.mutateAsync({ parent: habit.name, logDate: date });
+    } catch {
+      toast.error("Could not undo today's progress");
+    } finally {
+      setSavingNames((current) => {
+        const next = new Set(current);
+        next.delete(habit.name);
+        return next;
+      });
+    }
+  };
   if (isLoading) return <div className="mx-auto max-w-6xl py-20 text-center text-muted-foreground">Loading habits…</div>;
   if (isError)
     return (
@@ -118,10 +174,15 @@ const Habits = () => {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-foreground">Habits</h1>
-            <p className="text-sm text-muted-foreground">Consistency is the game. Performance is the score.</p>
+            <p className="text-sm text-muted-foreground">Your routine, seen as a whole.</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {view === "detail" && habits.length > 1 && (
+            <Button type="button" variant="ghost" size="sm" className="rounded-lg" onClick={() => setSearchParams({})}>
+              <ArrowLeftIcon className="size-4" /> Overview
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -149,13 +210,13 @@ const Habits = () => {
           </Button>
         </div>
       </div>
-      {habits.length > 1 && (
+      {view === "detail" && habits.length > 1 && (
         <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
           {habits.map((habit) => (
             <button
               type="button"
               key={habit.name}
-              onClick={() => setSelectedName(habit.name)}
+              onClick={() => setSearchParams({ habit: habit.name })}
               className={`shrink-0 rounded-full border px-4 py-2 text-sm transition-colors ${habit.name === selectedName ? "border-primary/20 bg-primary/10 font-medium text-primary shadow-xs" : "border-border bg-background text-muted-foreground hover:border-primary/20 hover:text-foreground"}`}
             >
               {habit.title}
@@ -177,6 +238,22 @@ const Habits = () => {
             Create a habit
           </Button>
         </section>
+      ) : habits.length > 1 && view === "overview" ? (
+        coachSummaries.length ? (
+          <HabitCoachDashboard
+            habits={habits}
+            summaries={coachSummaries}
+            today={date}
+            savingNames={savingNames}
+            onLog={(coachSummary) => void saveCoachTarget(coachSummary)}
+            onUndo={(coachSummary) => void undoCoachLog(coachSummary)}
+            onOpenHabit={(habit) => {
+              setSearchParams({ habit: habit.name });
+            }}
+          />
+        ) : (
+          <div className="py-20 text-center text-muted-foreground">Looking for patterns…</div>
+        )
       ) : scheduled && selected ? (
         <section className="flex min-h-[50vh] flex-col items-center justify-center rounded-3xl border border-primary/20 bg-primary/5 px-6 text-center">
           <FlameIcon className="size-10 text-primary" />

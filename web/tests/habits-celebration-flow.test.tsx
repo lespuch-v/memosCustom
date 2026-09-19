@@ -1,10 +1,11 @@
 import { create } from "@bufbuild/protobuf";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Habits from "@/pages/Habits";
 import { HabitSchema, HabitSummarySchema } from "@/types/proto/api/v1/habit_service_pb";
 
-const state = vi.hoisted(() => ({ habits: [] as unknown[], summary: undefined as unknown }));
+const state = vi.hoisted(() => ({ habits: [] as unknown[], summary: undefined as unknown, summaries: [] as unknown[] }));
 const mocks = vi.hoisted(() => ({
   saveLog: vi.fn(),
   refetchSummary: vi.fn(),
@@ -12,11 +13,14 @@ const mocks = vi.hoisted(() => ({
   createHabit: vi.fn(),
   updateHabit: vi.fn(),
   deleteHabit: vi.fn(),
+  getSummary: vi.fn(),
   prepareHabitAudio: vi.fn(),
   playHabitSound: vi.fn(),
   stopHabitSounds: vi.fn(),
   toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }),
 }));
+
+vi.mock("@/connect", () => ({ habitServiceClient: { getHabitSummary: mocks.getSummary } }));
 
 vi.mock("@/hooks/useHabits", () => ({
   useHabits: () => ({ data: state.habits, isLoading: false, isError: false, refetch: vi.fn() }),
@@ -26,6 +30,7 @@ vi.mock("@/hooks/useHabits", () => ({
     isError: false,
     refetch: mocks.refetchSummary,
   }),
+  useHabitSummaries: () => state.summaries.map((data) => ({ data, isPending: false, isError: false })),
   useCreateHabit: () => ({ mutateAsync: mocks.createHabit, isPending: false }),
   useUpdateHabit: () => ({ mutateAsync: mocks.updateHabit, isPending: false }),
   useUpsertHabitLog: () => ({ mutateAsync: mocks.saveLog, isPending: false }),
@@ -75,8 +80,15 @@ const makeSummary = ({ recorded, value, xp, streak }: { recorded: boolean; value
     recentDays: [{ date, value, recorded, successful: value >= 2, targetMet: value >= 20 }],
   });
 
+const renderHabits = (initialEntry = "/habits") =>
+  render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Habits />
+    </MemoryRouter>,
+  );
+
 const renderPage = async () => {
-  const rendered = render(<Habits />);
+  const rendered = renderHabits();
   await screen.findByRole("button", { name: /log progress|save progress/i });
   return rendered;
 };
@@ -88,10 +100,41 @@ describe("Habits celebration flow", () => {
     const habit = makeHabit();
     state.habits = [habit];
     state.summary = makeSummary({ recorded: false, value: 0, xp: 80, streak: 4 });
+    state.summaries = [state.summary];
     mocks.saveLog.mockResolvedValue(undefined);
     mocks.refetchSummary.mockResolvedValue({ data: makeSummary({ recorded: true, value: 20, xp: 90, streak: 5 }) });
     mocks.prepareHabitAudio.mockResolvedValue(undefined);
     mocks.playHabitSound.mockResolvedValue(undefined);
+  });
+
+  it("opens with the coach overview when several habits have summary data", async () => {
+    const secondHabit = create(HabitSchema, { ...makeHabit(), name: "habits/walking", title: "Lunch walk" });
+    const secondSummary = create(HabitSummarySchema, {
+      ...makeSummary({ recorded: true, value: 20, xp: 90, streak: 6 }),
+      habit: secondHabit,
+    });
+    state.habits = [makeHabit(), secondHabit];
+    state.summaries = [state.summary, secondSummary];
+
+    renderHabits();
+
+    expect(await screen.findByText("Coach's observation")).toBeInTheDocument();
+    expect(screen.getByText("1 of 2 logged today")).toBeInTheDocument();
+  });
+
+  it("reports a quick log as saved when only the follow-up score refresh fails", async () => {
+    const secondHabit = create(HabitSchema, { ...makeHabit(), name: "habits/walking", title: "Lunch walk" });
+    const secondSummary = makeSummary({ recorded: false, value: 0, xp: 80, streak: 4 });
+    secondSummary.habit = secondHabit;
+    state.habits = [makeHabit(), secondHabit];
+    state.summaries = [state.summary, secondSummary];
+    mocks.getSummary.mockRejectedValue(new Error("refresh offline"));
+
+    renderHabits();
+    fireEvent.click(await screen.findByRole("button", { name: "Log Reading target" }));
+
+    await waitFor(() => expect(mocks.toast).toHaveBeenCalledWith("Progress saved, but the latest score could not be loaded"));
+    expect(mocks.toast.error).not.toHaveBeenCalledWith("Could not save today's progress");
   });
 
   it("celebrates a first target save only after mutation and authoritative refetch", async () => {
@@ -159,7 +202,23 @@ describe("Habits celebration flow", () => {
     expect(mocks.playHabitSound).not.toHaveBeenCalled();
 
     firstRender.unmount();
-    render(<Habits />);
+    renderHabits();
     expect(await screen.findByRole("button", { name: "Unmute habit sounds" })).toBeInTheDocument();
+  });
+
+  it("opens an individual habit from the URL", async () => {
+    const secondHabit = create(HabitSchema, { ...makeHabit(), name: "habits/walking", title: "Lunch walk" });
+    const secondSummary = create(HabitSummarySchema, {
+      ...makeSummary({ recorded: false, value: 0, xp: 40, streak: 2 }),
+      habit: secondHabit,
+    });
+    state.habits = [makeHabit(), secondHabit];
+    state.summary = secondSummary;
+    state.summaries = [makeSummary({ recorded: false, value: 0, xp: 80, streak: 4 }), secondSummary];
+
+    renderHabits("/habits?habit=habits%2Fwalking");
+
+    expect(await screen.findByRole("button", { name: /log progress/i })).toBeInTheDocument();
+    expect(screen.queryByText("Coach's observation")).not.toBeInTheDocument();
   });
 });

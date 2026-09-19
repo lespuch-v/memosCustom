@@ -1,8 +1,8 @@
 import { create } from "@bufbuild/protobuf";
 import { FieldMaskSchema } from "@bufbuild/protobuf/wkt";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { habitServiceClient } from "@/connect";
-import { HabitSchema } from "@/types/proto/api/v1/habit_service_pb";
+import { type Habit, HabitSchema } from "@/types/proto/api/v1/habit_service_pb";
 
 export interface HabitDraft {
   title: string;
@@ -31,6 +31,15 @@ export const useHabitSummary = (name: string | undefined, asOfDate: string, enab
     queryKey: habitKeys.summary(name ?? "", asOfDate),
     queryFn: () => habitServiceClient.getHabitSummary({ name, asOfDate, days: 14 }),
     enabled: Boolean(name) && enabled,
+  });
+
+export const useHabitSummaries = (habits: Habit[], asOfDate: string, days: number) =>
+  useQueries({
+    queries: habits.map((habit) => ({
+      queryKey: [...habitKeys.summary(habit.name, asOfDate), days],
+      queryFn: () => habitServiceClient.getHabitSummary({ name: habit.name, asOfDate, days }),
+      enabled: habit.startDate <= asOfDate,
+    })),
   });
 
 export const useCreateHabit = () => {

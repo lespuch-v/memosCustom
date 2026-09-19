@@ -57,6 +57,7 @@ import { User_Role, UserNotification_Status } from "@/types/proto/api/v1/user_se
 import { useTranslate } from "@/utils/i18n";
 import MemosLogo from "../MemosLogo";
 import CommonSidebarContent from "./CommonSidebarContent";
+import HabitsSidebarContent from "./HabitsSidebarContent";
 import { getSidebarRouteKind } from "./routes";
 import SidebarRow, { SIDEBAR_ROW_CLASSES, SIDEBAR_ROW_FOCUS_CLASSES, SidebarRowIconSlot, sidebarRowStateClasses } from "./SidebarRow";
 import SidebarSection, { SIDEBAR_SECTION_STACK_CLASSES } from "./SidebarSection";
@@ -294,6 +295,7 @@ const RouteSidebarContent = () => {
   if (kind === "calendar") return <CollectionSidebarContent context="home" showStatistics={false} />;
   if (kind === "map") return <CollectionSidebarContent context="home" showStatistics={false} scopeFilter={MAP_MEMO_FILTER} />;
   if (kind === "attachments") return <AttachmentsSidebarContent />;
+  if (kind === "habits") return <HabitsSidebarContent />;
   if (kind === "ai") return <ContextRail />;
   if (kind === "inbox") return <InboxSidebarContent />;
   if (kind === "settings") return <SettingsSidebarContent />;
