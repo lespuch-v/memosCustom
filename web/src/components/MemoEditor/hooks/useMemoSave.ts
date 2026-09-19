@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { useNewMemo } from "@/contexts/NewMemoContext";
@@ -6,13 +6,29 @@ import { attachmentKeys } from "@/hooks/useAttachmentQueries";
 import { memoKeys } from "@/hooks/useMemoQueries";
 import { userKeys } from "@/hooks/useUserQueries";
 import { handleError } from "@/lib/error";
-import type { Visibility } from "@/types/proto/api/v1/memo_service_pb";
+import type { ListMemoCommentsResponse, Memo, Visibility } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import { errorService, memoService, validationService } from "../services";
 import { useEditorContext } from "../state";
 
 /** How long a closing host shows "Saved" before it unmounts the editor. */
 const SAVED_CONFIRMATION_MS = 900;
+
+type MemoCommentsQueryData = ListMemoCommentsResponse | InfiniteData<ListMemoCommentsResponse>;
+
+function prependComment(data: MemoCommentsQueryData | undefined, comment: Memo): MemoCommentsQueryData | undefined {
+  if (!data) return data;
+  if ("memos" in data) {
+    if (data.memos.some((memo) => memo.name === comment.name)) return data;
+    return { ...data, memos: [comment, ...data.memos] };
+  }
+  if (data.pages.length === 0 || data.pages.some((page) => page.memos.some((memo) => memo.name === comment.name))) return data;
+  const [firstPage, ...remainingPages] = data.pages;
+  return {
+    ...data,
+    pages: [{ ...firstPage, memos: [comment, ...firstPage.memos] }, ...remainingPages],
+  };
+}
 
 interface UseMemoSaveOptions {
   memoName?: string;
@@ -70,6 +86,13 @@ export function useMemoSave({
       // Prevent the autosave unmount flush from restoring the saved draft.
       discardDraft();
 
+      const savedMemo = result.memo;
+      if (parentMemoName && savedMemo) {
+        queryClient.setQueriesData<MemoCommentsQueryData>({ queryKey: memoKeys.comments(parentMemoName) }, (data) =>
+          prependComment(data, savedMemo),
+        );
+      }
+
       const invalidationPromises: Promise<unknown>[] = [
         queryClient.invalidateQueries({ queryKey: memoKeys.lists() }),
         queryClient.invalidateQueries({ queryKey: userKeys.stats() }),
@@ -82,10 +105,17 @@ export function useMemoSave({
         invalidationPromises.push(queryClient.invalidateQueries({ queryKey: memoKeys.comments(parentMemoName) }));
         invalidationPromises.push(queryClient.invalidateQueries({ queryKey: memoKeys.detail(parentMemoName) }));
       }
-      // Hosts that close after saving (edit, comment) hold a brief "Saved"
-      // confirmation on the toolbar while the caches refresh underneath. The
-      // in-place composer clears immediately, so it shows nothing.
-      if (memoName || parentMemoName) {
+      // The create response is authoritative enough to render the new comment.
+      // Close the comment editor immediately and let refetches reconcile in the background.
+      if (parentMemoName) {
+        dispatch(actions.reset());
+        onConfirm?.(result.memoName);
+        void Promise.all(invalidationPromises).catch(() => undefined);
+        return;
+      }
+      // Editing holds a brief "Saved" confirmation while the caches refresh.
+      // Creation flows clear or close immediately.
+      if (memoName) {
         dispatch(actions.setLoading("saving", false));
         dispatch(actions.setJustSaved(true));
         invalidationPromises.push(new Promise((resolve) => setTimeout(resolve, SAVED_CONFIRMATION_MS)));
