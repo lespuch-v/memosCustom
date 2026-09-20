@@ -60,6 +60,14 @@ func (s *APIV1Service) AnalyzeMemoSemantic(ctx context.Context, request *v1pb.An
 	if strings.TrimSpace(memo.Content) == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "memo content is required")
 	}
+	accessScope, _, err := s.resolveMemoAccessScope(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to resolve memo access: %v", err)
+	}
+	commentsByMemoID, err := s.resolveMemoCommentsForContext(ctx, []*store.Memo{memo}, accessScope)
+	if err != nil {
+		return nil, err
+	}
 	provider, err := s.resolveSemanticAnalysisProvider(ctx)
 	if err != nil {
 		return nil, err
@@ -68,7 +76,11 @@ func (s *APIV1Service) AnalyzeMemoSemantic(ctx context.Context, request *v1pb.An
 	if err != nil {
 		return nil, status.Errorf(codes.FailedPrecondition, "semantic analysis provider is invalid: %v", err)
 	}
-	result, err := client.Evaluate(ctx, decision.Request{Model: semanticAnalysisModel, State: memo.Content, Questions: semanticAnalysisQuestions})
+	result, err := client.Evaluate(ctx, decision.Request{
+		Model:     semanticAnalysisModel,
+		State:     buildSemanticAnalysisState(memo.Content, commentsByMemoID[memo.ID]),
+		Questions: semanticAnalysisQuestions,
+	})
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "semantic analysis provider failed: %v", err)
 	}
@@ -79,6 +91,22 @@ func (s *APIV1Service) AnalyzeMemoSemantic(ctx context.Context, request *v1pb.An
 		TimeSensitiveProbability: answer("is_time_sensitive"), QuestionProbability: answer("is_question"),
 		RevisitProbability: answer("worth_revisiting"), TechnicalProbability: answer("is_technical"), Model: result.Model,
 	}, nil
+}
+
+func buildSemanticAnalysisState(content string, comments []*store.Memo) string {
+	if len(comments) == 0 {
+		return content
+	}
+
+	var builder strings.Builder
+	builder.WriteString(strings.TrimSpace(content))
+	builder.WriteString("\n\nComments:\n")
+	for _, comment := range comments {
+		builder.WriteString("- ")
+		builder.WriteString(strings.TrimSpace(comment.Content))
+		builder.WriteString("\n")
+	}
+	return builder.String()
 }
 
 func (s *APIV1Service) resolveSemanticAnalysisProvider(ctx context.Context) (ai.ProviderConfig, error) {

@@ -754,7 +754,7 @@
       "chat-max-completion-placeholder": "provayder defoltu",
       "chat-model": "Model",
       "chat-model-help": "Provayderin model siyahısını yükləyin və ya model identifikatorunu yazın.",
-      "chat-model-placeholder": "anthropic/claude-sonnet-4",
+      "chat-model-placeholder": "z-ai/glm-5.3-flash",
       "chat-models-loaded": "{{count}} model yükləndi. Filtrləmək üçün yazmağa başlayın.",
       "chat-no-models": "Provayder heç bir model qaytarmadı.",
       "chat-no-provider": "Yoxdur — söhbət deaktivdir",
@@ -798,6 +798,7 @@
       "transcription-prompt-placeholder": "Adlar: Alice, Bob. Lüğət: kubernetes, OAuth.",
       "transcription-prompt": "Prompt ipucları",
       "transcription-provider": "Provayder",
+      "transcription-provider-type-incompatible": "Bu provayder transkripsiyaya təyin edilib. Növünü dəyişməzdən əvvəl OpenAI və ya Gemini seçin, yaxud başqa transkripsiya provayderi seçin.",
       "transcription-title": "Transkripsiya",
       "transcription-warning-no-key": "Seçilmiş provayderin API açarı təyin edilməyib. Açar əlavə etmək üçün yuxarıdakı inteqrasiyanı redaktə edin."
     },

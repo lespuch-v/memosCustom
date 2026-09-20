@@ -1,6 +1,7 @@
 import { create } from "@bufbuild/protobuf";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { TimestampSchema } from "@bufbuild/protobuf/wkt";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SemanticAnalysisProvider, useSemanticAnalysis } from "@/contexts/SemanticAnalysisContext";
 import { MemoSchema } from "@/types/proto/api/v1/memo_service_pb";
@@ -28,6 +29,22 @@ const Harness = () => {
   );
 };
 
+const RouteHarness = () => {
+  const analysis = useSemanticAnalysis();
+  const navigate = useNavigate();
+  return (
+    <>
+      <button type="button" onClick={(event) => analysis.openForMemo(memo, event.currentTarget)}>
+        open
+      </button>
+      <button type="button" onClick={() => navigate("/memos/two")}>
+        navigate
+      </button>
+      <output data-testid="analysis-state">{analysis.open ? "open" : "closed"}</output>
+    </>
+  );
+};
+
 describe("SemanticAnalysisProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,7 +52,13 @@ describe("SemanticAnalysisProvider", () => {
   });
 
   it("caches a result for the same memo revision and supports an explicit refresh", async () => {
-    render(<SemanticAnalysisProvider><Harness /></SemanticAnalysisProvider>);
+    render(
+      <MemoryRouter>
+        <SemanticAnalysisProvider>
+          <Harness />
+        </SemanticAnalysisProvider>
+      </MemoryRouter>,
+    );
     fireEvent.click(screen.getByText("open"));
     await screen.findByText("success:0.8");
     fireEvent.click(screen.getByText("close"));
@@ -49,10 +72,32 @@ describe("SemanticAnalysisProvider", () => {
   it("ignores a late response after closing", async () => {
     let resolve!: (value: unknown) => void;
     api.analyzeMemoSemantic.mockReturnValue(new Promise((done) => { resolve = done; }));
-    render(<SemanticAnalysisProvider><Harness /></SemanticAnalysisProvider>);
+    render(
+      <MemoryRouter>
+        <SemanticAnalysisProvider>
+          <Harness />
+        </SemanticAnalysisProvider>
+      </MemoryRouter>,
+    );
     fireEvent.click(screen.getByText("open"));
     fireEvent.click(screen.getByText("close"));
     await act(async () => resolve({ ideaProbability: 1, model: "late" }));
     expect(screen.getByText("loading:")).toBeInTheDocument();
+  });
+
+  it("closes when navigation removes the memo anchor", async () => {
+    render(
+      <MemoryRouter initialEntries={["/memos/one"]}>
+        <SemanticAnalysisProvider>
+          <RouteHarness />
+        </SemanticAnalysisProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "open" }));
+    expect(screen.getByTestId("analysis-state")).toHaveTextContent("open");
+    fireEvent.click(screen.getByText("navigate"));
+
+    await waitFor(() => expect(screen.getByTestId("analysis-state")).toHaveTextContent("closed"));
   });
 });

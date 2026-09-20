@@ -109,6 +109,19 @@ describe("AI Hub configuration loading", () => {
     expect(screen.queryByText("ai.loading-config")).not.toBeInTheDocument();
   });
 
+  it("uses the default model when a provider is configured without a saved model", async () => {
+    instance.hasSetting.mockReturnValue(true);
+    instance.aiSetting = {
+      providers: [{ id: "openai-1", type: InstanceSetting_AIProviderType.OPENAI }],
+      chat: { providerId: "openai-1", model: "" },
+    };
+
+    render(<AIHub />, { wrapper });
+
+    expect(await screen.findByTestId("composer")).toBeInTheDocument();
+    expect(screen.queryByText("ai.not-configured")).not.toBeInTheDocument();
+  });
+
   it("swaps the waiting state for the chat once the setting arrives", async () => {
     instance.hasSetting.mockReturnValue(false);
     const { rerender } = render(<AIHub />, { wrapper });
