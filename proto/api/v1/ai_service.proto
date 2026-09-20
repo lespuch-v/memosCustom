@@ -47,6 +47,34 @@ service AIService {
     };
     option (google.api.method_signature) = "messages";
   }
+
+  // AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
+  rpc AnalyzeMemoSemantic(AnalyzeMemoSemanticRequest) returns (AnalyzeMemoSemanticResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/ai:analyzeMemoSemantic"
+      body: "*"
+    };
+    option (google.api.method_signature) = "memo";
+  }
+}
+
+message AnalyzeMemoSemanticRequest {
+  // Required. Memo resource name in the form memos/{uid}.
+  string memo = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message AnalyzeMemoSemanticResponse {
+  double idea_probability = 1;
+  double task_probability = 2;
+  double journal_probability = 3;
+  double reference_probability = 4;
+  double actionable_probability = 5;
+  double revisit_probability = 6;
+  double technical_probability = 7;
+  double question_probability = 9;
+  double time_sensitive_probability = 10;
+  // Provider-reported resolved model.
+  string model = 8;
 }
 
 message TranscribeRequest {

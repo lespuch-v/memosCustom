@@ -322,6 +322,10 @@ message InstanceSetting {
     // chat is the conversational feature configuration.
     // When unset or chat.provider_id is empty, chat is disabled.
     ChatConfig chat = 3;
+
+    // semantic_analysis configures on-demand Jev judgments for one memo.
+    // When unset or semantic_analysis.provider_id is empty, the feature is disabled.
+    SemanticAnalysisConfig semantic_analysis = 4;
   }
 
   // AIProviderConfig represents one callable AI provider connection.
@@ -365,6 +369,12 @@ message InstanceSetting {
 
     // max_completion_tokens bounds the reply length. Zero leaves it to the provider.
     int64 max_completion_tokens = 4;
+  }
+
+  // SemanticAnalysisConfig selects the OpenRouter provider used for Jev decisions.
+  message SemanticAnalysisConfig {
+    // provider_id references an OPENROUTER entry in AISetting.providers[].id.
+    string provider_id = 1;
   }
 
   // TranscriptionConfig configures the speech-to-text feature.

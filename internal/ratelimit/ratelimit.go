@@ -41,6 +41,8 @@ const (
 	// ScopeChatUser counts AI Hub chat calls per user. Each call spends the
 	// instance's provider credit, so it is budgeted like transcription.
 	ScopeChatUser Scope = "chat_user"
+	// ScopeSemanticAnalysisUser counts on-demand Jev calls per user.
+	ScopeSemanticAnalysisUser Scope = "semantic_analysis_user"
 	// ScopeChatEstimateUser counts AI Hub context estimates per user. An estimate
 	// only queries local notes and costs no provider credit, but it fires on
 	// every selection change, so it gets its own looser budget rather than eating
@@ -70,18 +72,19 @@ func (p Policy) Rule(scope Scope) (Rule, bool) {
 // address is never throttled in ordinary use.
 func DefaultPolicy() Policy {
 	return Policy{
-		ScopeAnonymous:          {Limit: 300, Window: time.Minute},
-		ScopeAuthenticated:      {Limit: 600, Window: time.Minute},
-		ScopeSignInIP:           {Limit: 30, Window: 15 * time.Minute},
-		ScopeSignInAccount:      {Limit: 10, Window: 15 * time.Minute},
-		ScopeSignupIP:           {Limit: 10, Window: time.Hour},
-		ScopeValidateIP:         {Limit: 60, Window: time.Minute},
-		ScopePasswordResetIP:    {Limit: 10, Window: time.Hour},
-		ScopePasswordResetEmail: {Limit: 3, Window: time.Hour},
-		ScopeLinkMetadata:       {Limit: 60, Window: time.Minute},
-		ScopeUploadUser:         {Limit: 120, Window: time.Minute},
-		ScopeTranscribeUser:     {Limit: 20, Window: time.Hour},
-		ScopeChatUser:           {Limit: 120, Window: time.Hour},
+		ScopeAnonymous:            {Limit: 300, Window: time.Minute},
+		ScopeAuthenticated:        {Limit: 600, Window: time.Minute},
+		ScopeSignInIP:             {Limit: 30, Window: 15 * time.Minute},
+		ScopeSignInAccount:        {Limit: 10, Window: 15 * time.Minute},
+		ScopeSignupIP:             {Limit: 10, Window: time.Hour},
+		ScopeValidateIP:           {Limit: 60, Window: time.Minute},
+		ScopePasswordResetIP:      {Limit: 10, Window: time.Hour},
+		ScopePasswordResetEmail:   {Limit: 3, Window: time.Hour},
+		ScopeLinkMetadata:         {Limit: 60, Window: time.Minute},
+		ScopeUploadUser:           {Limit: 120, Window: time.Minute},
+		ScopeTranscribeUser:       {Limit: 20, Window: time.Hour},
+		ScopeChatUser:             {Limit: 120, Window: time.Hour},
+		ScopeSemanticAnalysisUser: {Limit: 120, Window: time.Hour},
 		// Estimates are cheap and fire as the user edits the tag selection, so
 		// this budget is per minute and well above any human clicking rate.
 		ScopeChatEstimateUser: {Limit: 120, Window: time.Minute},

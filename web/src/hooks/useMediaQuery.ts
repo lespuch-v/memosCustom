@@ -11,11 +11,12 @@ const BREAKPOINTS: Record<Breakpoint, number> = {
 
 const useMediaQuery = (breakpoint: Breakpoint): boolean => {
   const [matches, setMatches] = useState(() => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
     return window.matchMedia(`(min-width: ${BREAKPOINTS[breakpoint]}px)`).matches;
   });
 
   useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
     const mediaQuery = window.matchMedia(`(min-width: ${BREAKPOINTS[breakpoint]}px)`);
 
     const handleChange = (e: MediaQueryListEvent) => {

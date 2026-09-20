@@ -9,17 +9,19 @@ import AppSidebar, {
   SidebarResizeHandle,
   useSidebarWidth,
 } from "@/components/AppSidebar";
+import { SemanticAnalysisInspector } from "@/components/SemanticAnalysis";
 import { AiContextProvider } from "@/contexts/AiContext";
 import { AppSidebarProvider } from "@/contexts/AppSidebarContext";
 import { GlobalMemoEditorProvider } from "@/contexts/GlobalMemoEditorContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { MemoFilterProvider, useMemoFilterContext } from "@/contexts/MemoFilterContext";
 import { SpaceProvider } from "@/contexts/SpaceContext";
+import { SemanticAnalysisProvider } from "@/contexts/SemanticAnalysisContext";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 import { ROUTES, resolveCollectionRoute } from "@/router/routes";
-import { InstanceAccessMode } from "@/types/proto/api/v1/instance_service_pb";
+import { InstanceAccessMode, InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
 import { buildAuthRoute, shouldGatePrivateInstance } from "@/utils/auth-redirect";
 import { useTranslate } from "@/utils/i18n";
 
@@ -46,7 +48,7 @@ const RootLayoutContent = () => {
   const [searchParams] = useSearchParams();
   const currentUser = useCurrentUser();
   const md = useMediaQuery("md");
-  const { profile } = useInstance();
+  const { profile, fetchSetting } = useInstance();
   const { removeFilter } = useMemoFilterContext();
   const { pathname } = location;
   // Routes that scroll inside themselves rather than with the document: the map
@@ -68,6 +70,10 @@ const RootLayoutContent = () => {
 
     prevPathnameRef.current = pathname;
   }, [pathname, searchParams, removeFilter]);
+
+  useEffect(() => {
+    if (currentUser) void fetchSetting?.(InstanceSetting_Key.AI);
+  }, [currentUser, fetchSetting]);
 
   // Anonymous visitors to private instances may only reach share links. Treat an
   // unspecified mode as private so a partial or older response cannot expose content.
@@ -109,6 +115,7 @@ const RootLayoutContent = () => {
         <Outlet />
       </main>
       <QuickFindDialog />
+      <SemanticAnalysisInspector />
     </div>
   );
 };
@@ -121,9 +128,11 @@ const RootLayout = () => (
             reads the selection lives on the AI route, so the selection sits above
             both rather than inside the page. */}
         <AiContextProvider>
-          <GlobalMemoEditorProvider>
-            <RootLayoutContent />
-          </GlobalMemoEditorProvider>
+          <SemanticAnalysisProvider>
+            <GlobalMemoEditorProvider>
+              <RootLayoutContent />
+            </GlobalMemoEditorProvider>
+          </SemanticAnalysisProvider>
         </AiContextProvider>
       </AppSidebarProvider>
     </MemoFilterProvider>

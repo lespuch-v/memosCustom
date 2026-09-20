@@ -125,7 +125,35 @@ func (s *APIV1Service) prepareInstanceAISettingForUpdate(ctx context.Context, se
 	if err := preparePersistedTranscriptionConfig(setting, existing); err != nil {
 		return err
 	}
-	return preparePersistedChatConfig(setting, existing)
+	if err := preparePersistedChatConfig(setting, existing); err != nil {
+		return err
+	}
+	return preparePersistedSemanticAnalysisConfig(setting, existing)
+}
+
+func preparePersistedSemanticAnalysisConfig(setting *storepb.InstanceAISetting, existing *storepb.InstanceAISetting) error {
+	if setting.SemanticAnalysis == nil && existing != nil {
+		setting.SemanticAnalysis = existing.GetSemanticAnalysis()
+	}
+	if setting.SemanticAnalysis == nil {
+		return nil
+	}
+	cfg := setting.SemanticAnalysis
+	cfg.ProviderId = strings.TrimSpace(cfg.ProviderId)
+	if cfg.ProviderId == "" {
+		return nil
+	}
+	for _, provider := range setting.Providers {
+		if provider == nil || provider.Id != cfg.ProviderId {
+			continue
+		}
+		providerType := convertAIProviderTypeFromStore(provider.Type)
+		if providerType != ai.ProviderOpenRouter {
+			return errors.Errorf("provider type %q is not supported for semantic analysis", providerType)
+		}
+		return nil
+	}
+	return errors.Errorf("semantic analysis provider_id %q does not reference any configured provider", cfg.ProviderId)
 }
 
 func preparePersistedTranscriptionConfig(setting *storepb.InstanceAISetting, existing *storepb.InstanceAISetting) error {

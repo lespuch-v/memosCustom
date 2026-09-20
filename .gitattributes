@@ -1,0 +1,17 @@
+# Normalize all text files to LF everywhere, so Windows checkouts don't
+# rewrite line endings and flood git status with stat-only noise.
+* text=auto eol=lf
+
+# Explicit binaries; text=auto usually detects these, but never let a
+# misdetection rewrite them.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary

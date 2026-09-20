@@ -23,6 +23,7 @@ const (
 	AIService_ListProviderModels_FullMethodName  = "/memos.api.v1.AIService/ListProviderModels"
 	AIService_EstimateChatContext_FullMethodName = "/memos.api.v1.AIService/EstimateChatContext"
 	AIService_Chat_FullMethodName                = "/memos.api.v1.AIService/Chat"
+	AIService_AnalyzeMemoSemantic_FullMethodName = "/memos.api.v1.AIService/AnalyzeMemoSemantic"
 )
 
 // AIServiceClient is the client API for AIService service.
@@ -43,6 +44,8 @@ type AIServiceClient interface {
 	// resends the whole conversation each turn; the server keeps no chat state.
 	// The model may propose note changes, but this method never writes a memo.
 	Chat(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*ChatResponse, error)
+	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
+	AnalyzeMemoSemantic(ctx context.Context, in *AnalyzeMemoSemanticRequest, opts ...grpc.CallOption) (*AnalyzeMemoSemanticResponse, error)
 }
 
 type aIServiceClient struct {
@@ -93,6 +96,16 @@ func (c *aIServiceClient) Chat(ctx context.Context, in *ChatRequest, opts ...grp
 	return out, nil
 }
 
+func (c *aIServiceClient) AnalyzeMemoSemantic(ctx context.Context, in *AnalyzeMemoSemanticRequest, opts ...grpc.CallOption) (*AnalyzeMemoSemanticResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AnalyzeMemoSemanticResponse)
+	err := c.cc.Invoke(ctx, AIService_AnalyzeMemoSemantic_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AIServiceServer is the server API for AIService service.
 // All implementations must embed UnimplementedAIServiceServer
 // for forward compatibility.
@@ -111,6 +124,8 @@ type AIServiceServer interface {
 	// resends the whole conversation each turn; the server keeps no chat state.
 	// The model may propose note changes, but this method never writes a memo.
 	Chat(context.Context, *ChatRequest) (*ChatResponse, error)
+	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
+	AnalyzeMemoSemantic(context.Context, *AnalyzeMemoSemanticRequest) (*AnalyzeMemoSemanticResponse, error)
 	mustEmbedUnimplementedAIServiceServer()
 }
 
@@ -132,6 +147,9 @@ func (UnimplementedAIServiceServer) EstimateChatContext(context.Context, *Estima
 }
 func (UnimplementedAIServiceServer) Chat(context.Context, *ChatRequest) (*ChatResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Chat not implemented")
+}
+func (UnimplementedAIServiceServer) AnalyzeMemoSemantic(context.Context, *AnalyzeMemoSemanticRequest) (*AnalyzeMemoSemanticResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AnalyzeMemoSemantic not implemented")
 }
 func (UnimplementedAIServiceServer) mustEmbedUnimplementedAIServiceServer() {}
 func (UnimplementedAIServiceServer) testEmbeddedByValue()                   {}
@@ -226,6 +244,24 @@ func _AIService_Chat_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AIService_AnalyzeMemoSemantic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AnalyzeMemoSemanticRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).AnalyzeMemoSemantic(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_AnalyzeMemoSemantic_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).AnalyzeMemoSemantic(ctx, req.(*AnalyzeMemoSemanticRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AIService_ServiceDesc is the grpc.ServiceDesc for AIService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -248,6 +284,10 @@ var AIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Chat",
 			Handler:    _AIService_Chat_Handler,
+		},
+		{
+			MethodName: "AnalyzeMemoSemantic",
+			Handler:    _AIService_AnalyzeMemoSemantic_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

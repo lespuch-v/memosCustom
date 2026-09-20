@@ -13,7 +13,10 @@ option go_package = "gen/api/v1";
 // HabitService manages the authenticated user's daily habits.
 service HabitService {
   rpc CreateHabit(CreateHabitRequest) returns (Habit) {
-    option (google.api.http) = {post: "/api/v1/habits" body: "habit"};
+    option (google.api.http) = {
+      post: "/api/v1/habits"
+      body: "habit"
+    };
   }
   rpc ListHabits(ListHabitsRequest) returns (ListHabitsResponse) {
     option (google.api.http) = {get: "/api/v1/habits"};
@@ -22,13 +25,19 @@ service HabitService {
     option (google.api.http) = {get: "/api/v1/{name=habits/*}"};
   }
   rpc UpdateHabit(UpdateHabitRequest) returns (Habit) {
-    option (google.api.http) = {patch: "/api/v1/{habit.name=habits/*}" body: "habit"};
+    option (google.api.http) = {
+      patch: "/api/v1/{habit.name=habits/*}"
+      body: "habit"
+    };
   }
   rpc DeleteHabit(DeleteHabitRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {delete: "/api/v1/{name=habits/*}"};
   }
   rpc UpsertHabitLog(UpsertHabitLogRequest) returns (HabitLog) {
-    option (google.api.http) = {put: "/api/v1/{parent=habits/*}/logs" body: "log"};
+    option (google.api.http) = {
+      put: "/api/v1/{parent=habits/*}/logs"
+      body: "log"
+    };
   }
   rpc DeleteHabitLog(DeleteHabitLogRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {delete: "/api/v1/{parent=habits/*}/logs"};
@@ -39,7 +48,10 @@ service HabitService {
 }
 
 message Habit {
-  option (google.api.resource) = {type: "memos.api.v1/Habit" pattern: "habits/{habit}"};
+  option (google.api.resource) = {
+    type: "memos.api.v1/Habit"
+    pattern: "habits/{habit}"
+  };
   string name = 1 [(google.api.field_behavior) = IDENTIFIER];
   string title = 2 [(google.api.field_behavior) = REQUIRED];
   string identity = 3;
@@ -82,12 +94,34 @@ message HabitSummary {
   repeated HabitDay recent_days = 14;
 }
 
-message CreateHabitRequest { Habit habit = 1 [(google.api.field_behavior) = REQUIRED]; string habit_id = 2; }
+message CreateHabitRequest {
+  Habit habit = 1 [(google.api.field_behavior) = REQUIRED];
+  string habit_id = 2;
+}
 message ListHabitsRequest {}
-message ListHabitsResponse { repeated Habit habits = 1; }
-message GetHabitRequest { string name = 1 [(google.api.field_behavior) = REQUIRED]; }
-message UpdateHabitRequest { Habit habit = 1 [(google.api.field_behavior) = REQUIRED]; google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED]; }
-message DeleteHabitRequest { string name = 1 [(google.api.field_behavior) = REQUIRED]; }
-message UpsertHabitLogRequest { string parent = 1 [(google.api.field_behavior) = REQUIRED]; HabitLog log = 2 [(google.api.field_behavior) = REQUIRED]; }
-message DeleteHabitLogRequest { string parent = 1 [(google.api.field_behavior) = REQUIRED]; string log_date = 2 [(google.api.field_behavior) = REQUIRED]; }
-message GetHabitSummaryRequest { string name = 1 [(google.api.field_behavior) = REQUIRED]; string as_of_date = 2 [(google.api.field_behavior) = REQUIRED]; int32 days = 3; }
+message ListHabitsResponse {
+  repeated Habit habits = 1;
+}
+message GetHabitRequest {
+  string name = 1 [(google.api.field_behavior) = REQUIRED];
+}
+message UpdateHabitRequest {
+  Habit habit = 1 [(google.api.field_behavior) = REQUIRED];
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = REQUIRED];
+}
+message DeleteHabitRequest {
+  string name = 1 [(google.api.field_behavior) = REQUIRED];
+}
+message UpsertHabitLogRequest {
+  string parent = 1 [(google.api.field_behavior) = REQUIRED];
+  HabitLog log = 2 [(google.api.field_behavior) = REQUIRED];
+}
+message DeleteHabitLogRequest {
+  string parent = 1 [(google.api.field_behavior) = REQUIRED];
+  string log_date = 2 [(google.api.field_behavior) = REQUIRED];
+}
+message GetHabitSummaryRequest {
+  string name = 1 [(google.api.field_behavior) = REQUIRED];
+  string as_of_date = 2 [(google.api.field_behavior) = REQUIRED];
+  int32 days = 3;
+}

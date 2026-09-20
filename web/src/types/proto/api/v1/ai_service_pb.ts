@@ -13,7 +13,90 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file api/v1/ai_service.proto.
  */
 export const file_api_v1_ai_service: GenFile = /*@__PURE__*/
-  fileDesc("ChdhcGkvdjEvYWlfc2VydmljZS5wcm90bxIMbWVtb3MuYXBpLnYxIkkKEVRyYW5zY3JpYmVSZXF1ZXN0EjQKBWF1ZGlvGAEgASgLMiAubWVtb3MuYXBpLnYxLlRyYW5zY3JpcHRpb25BdWRpb0ID4EECIncKElRyYW5zY3JpcHRpb25BdWRpbxIWCgdjb250ZW50GAEgASgMQgPgQQRIABINCgN1cmkYAiABKAlIABIVCghmaWxlbmFtZRgDIAEoCUID4EEBEhkKDGNvbnRlbnRfdHlwZRgEIAEoCUID4EEBQggKBnNvdXJjZSIiChJUcmFuc2NyaWJlUmVzcG9uc2USDAoEdGV4dBgBIAEoCSI1ChlMaXN0UHJvdmlkZXJNb2RlbHNSZXF1ZXN0EhgKC3Byb3ZpZGVyX2lkGAEgASgJQgPgQQIiSwoaTGlzdFByb3ZpZGVyTW9kZWxzUmVzcG9uc2USLQoGbW9kZWxzGAEgAygLMh0ubWVtb3MuYXBpLnYxLkFJUHJvdmlkZXJNb2RlbCI1Cg9BSVByb3ZpZGVyTW9kZWwSCgoCaWQYASABKAkSFgoOY29udGV4dF9sZW5ndGgYAiABKAMibQoaRXN0aW1hdGVDaGF0Q29udGV4dFJlcXVlc3QSEwoGZmlsdGVyGAEgASgJQgPgQQISHQoQaW5jbHVkZV9jb21tZW50cxgDIAEoCEID4EEBSgQIAhADUhVjb250ZXh0X2J1ZGdldF90b2tlbnMijQEKG0VzdGltYXRlQ2hhdENvbnRleHRSZXNwb25zZRISCgptZW1vX2NvdW50GAEgASgDEhMKC3RvdGFsX2NoYXJzGAIgASgDEhgKEGVzdGltYXRlZF90b2tlbnMYAyABKAMSHQoVY29udGV4dF9idWRnZXRfdG9rZW5zGAQgASgDEgwKBGZpdHMYBSABKAgiSwoLQ2hhdE1lc3NhZ2USKwoEcm9sZRgBIAEoDjIdLm1lbW9zLmFwaS52MS5DaGF0TWVzc2FnZVJvbGUSDwoHY29udGVudBgCIAEoCSLNAQoLQ2hhdFJlcXVlc3QSEwoGZmlsdGVyGAMgASgJQgPgQQESMAoIbWVzc2FnZXMYBCADKAsyGS5tZW1vcy5hcGkudjEuQ2hhdE1lc3NhZ2VCA+BBAhIdChBpbmNsdWRlX2NvbW1lbnRzGAcgASgIQgPgQQFKBAgBEAJKBAgCEANKBAgFEAZKBAgGEAdSC3Byb3ZpZGVyX2lkUgVtb2RlbFIVY29udGV4dF9idWRnZXRfdG9rZW5zUhVtYXhfY29tcGxldGlvbl90b2tlbnMikQEKDENoYXRQcm9wb3NhbBIwCgZhY3Rpb24YASABKA4yIC5tZW1vcy5hcGkudjEuQ2hhdFByb3Bvc2FsQWN0aW9uEg8KB2NvbnRlbnQYAiABKAkSDgoGdGFyZ2V0GAMgASgJEhsKDnRhcmdldF9jb250ZW50GAQgASgJSACIAQFCEQoPX3RhcmdldF9jb250ZW50IrQCCgxDaGF0UmVzcG9uc2USDwoHY29udGVudBgBIAEoCRItCglwcm9wb3NhbHMYAiADKAsyGi5tZW1vcy5hcGkudjEuQ2hhdFByb3Bvc2FsEhoKEmNvbnRleHRfbWVtb19jb3VudBgDIAEoAxIgChhjb250ZXh0X2VzdGltYXRlZF90b2tlbnMYBCABKAMSHQoVY29udGV4dF9idWRnZXRfdG9rZW5zGAUgASgDEhUKDXByb21wdF90b2tlbnMYBiABKAMSGQoRY29tcGxldGlvbl90b2tlbnMYByABKAMSFAoMdG90YWxfdG9rZW5zGAggASgDEg0KBW1vZGVsGAkgASgJEhEKCXRydW5jYXRlZBgKIAEoCBIdChVjb250ZXh0X2NvbW1lbnRfY291bnQYCyABKAMqcQoPQ2hhdE1lc3NhZ2VSb2xlEiEKHUNIQVRfTUVTU0FHRV9ST0xFX1VOU1BFQ0lGSUVEEAASGgoWQ0hBVF9NRVNTQUdFX1JPTEVfVVNFUhABEh8KG0NIQVRfTUVTU0FHRV9ST0xFX0FTU0lTVEFOVBACKnwKEkNoYXRQcm9wb3NhbEFjdGlvbhIkCiBDSEFUX1BST1BPU0FMX0FDVElPTl9VTlNQRUNJRklFRBAAEh8KG0NIQVRfUFJPUE9TQUxfQUNUSU9OX0NSRUFURRABEh8KG0NIQVRfUFJPUE9TQUxfQUNUSU9OX1VQREFURRACMq4ECglBSVNlcnZpY2USeQoKVHJhbnNjcmliZRIfLm1lbW9zLmFwaS52MS5UcmFuc2NyaWJlUmVxdWVzdBogLm1lbW9zLmFwaS52MS5UcmFuc2NyaWJlUmVzcG9uc2UiKNpBBWF1ZGlvgtPkkwIaOgEqIhUvYXBpL3YxL2FpOnRyYW5zY3JpYmUSngEKEkxpc3RQcm92aWRlck1vZGVscxInLm1lbW9zLmFwaS52MS5MaXN0UHJvdmlkZXJNb2RlbHNSZXF1ZXN0GigubWVtb3MuYXBpLnYxLkxpc3RQcm92aWRlck1vZGVsc1Jlc3BvbnNlIjXaQQtwcm92aWRlcl9pZILT5JMCIRIfL2FwaS92MS9haS97cHJvdmlkZXJfaWR9L21vZGVscxKeAQoTRXN0aW1hdGVDaGF0Q29udGV4dBIoLm1lbW9zLmFwaS52MS5Fc3RpbWF0ZUNoYXRDb250ZXh0UmVxdWVzdBopLm1lbW9zLmFwaS52MS5Fc3RpbWF0ZUNoYXRDb250ZXh0UmVzcG9uc2UiMtpBBmZpbHRlcoLT5JMCIzoBKiIeL2FwaS92MS9haTplc3RpbWF0ZUNoYXRDb250ZXh0EmQKBENoYXQSGS5tZW1vcy5hcGkudjEuQ2hhdFJlcXVlc3QaGi5tZW1vcy5hcGkudjEuQ2hhdFJlc3BvbnNlIiXaQQhtZXNzYWdlc4LT5JMCFDoBKiIPL2FwaS92MS9haTpjaGF0QqYBChBjb20ubWVtb3MuYXBpLnYxQg5BaVNlcnZpY2VQcm90b1ABWjBnaXRodWIuY29tL3VzZW1lbW9zL21lbW9zL3Byb3RvL2dlbi9hcGkvdjE7YXBpdjGiAgNNQViqAgxNZW1vcy5BcGkuVjHKAgxNZW1vc1xBcGlcVjHiAhhNZW1vc1xBcGlcVjFcR1BCTWV0YWRhdGHqAg5NZW1vczo6QXBpOjpWMWIGcHJvdG8z", [file_google_api_annotations, file_google_api_client, file_google_api_field_behavior]);
+  fileDesc("ChdhcGkvdjEvYWlfc2VydmljZS5wcm90bxIMbWVtb3MuYXBpLnYxIi8KGkFuYWx5emVNZW1vU2VtYW50aWNSZXF1ZXN0EhEKBG1lbW8YASABKAlCA+BBAiK6AgobQW5hbHl6ZU1lbW9TZW1hbnRpY1Jlc3BvbnNlEhgKEGlkZWFfcHJvYmFiaWxpdHkYASABKAESGAoQdGFza19wcm9iYWJpbGl0eRgCIAEoARIbChNqb3VybmFsX3Byb2JhYmlsaXR5GAMgASgBEh0KFXJlZmVyZW5jZV9wcm9iYWJpbGl0eRgEIAEoARIeChZhY3Rpb25hYmxlX3Byb2JhYmlsaXR5GAUgASgBEhsKE3JldmlzaXRfcHJvYmFiaWxpdHkYBiABKAESHQoVdGVjaG5pY2FsX3Byb2JhYmlsaXR5GAcgASgBEhwKFHF1ZXN0aW9uX3Byb2JhYmlsaXR5GAkgASgBEiIKGnRpbWVfc2Vuc2l0aXZlX3Byb2JhYmlsaXR5GAogASgBEg0KBW1vZGVsGAggASgJIkkKEVRyYW5zY3JpYmVSZXF1ZXN0EjQKBWF1ZGlvGAEgASgLMiAubWVtb3MuYXBpLnYxLlRyYW5zY3JpcHRpb25BdWRpb0ID4EECIncKElRyYW5zY3JpcHRpb25BdWRpbxIWCgdjb250ZW50GAEgASgMQgPgQQRIABINCgN1cmkYAiABKAlIABIVCghmaWxlbmFtZRgDIAEoCUID4EEBEhkKDGNvbnRlbnRfdHlwZRgEIAEoCUID4EEBQggKBnNvdXJjZSIiChJUcmFuc2NyaWJlUmVzcG9uc2USDAoEdGV4dBgBIAEoCSI1ChlMaXN0UHJvdmlkZXJNb2RlbHNSZXF1ZXN0EhgKC3Byb3ZpZGVyX2lkGAEgASgJQgPgQQIiSwoaTGlzdFByb3ZpZGVyTW9kZWxzUmVzcG9uc2USLQoGbW9kZWxzGAEgAygLMh0ubWVtb3MuYXBpLnYxLkFJUHJvdmlkZXJNb2RlbCI1Cg9BSVByb3ZpZGVyTW9kZWwSCgoCaWQYASABKAkSFgoOY29udGV4dF9sZW5ndGgYAiABKAMibQoaRXN0aW1hdGVDaGF0Q29udGV4dFJlcXVlc3QSEwoGZmlsdGVyGAEgASgJQgPgQQISHQoQaW5jbHVkZV9jb21tZW50cxgDIAEoCEID4EEBSgQIAhADUhVjb250ZXh0X2J1ZGdldF90b2tlbnMijQEKG0VzdGltYXRlQ2hhdENvbnRleHRSZXNwb25zZRISCgptZW1vX2NvdW50GAEgASgDEhMKC3RvdGFsX2NoYXJzGAIgASgDEhgKEGVzdGltYXRlZF90b2tlbnMYAyABKAMSHQoVY29udGV4dF9idWRnZXRfdG9rZW5zGAQgASgDEgwKBGZpdHMYBSABKAgiSwoLQ2hhdE1lc3NhZ2USKwoEcm9sZRgBIAEoDjIdLm1lbW9zLmFwaS52MS5DaGF0TWVzc2FnZVJvbGUSDwoHY29udGVudBgCIAEoCSLNAQoLQ2hhdFJlcXVlc3QSEwoGZmlsdGVyGAMgASgJQgPgQQESMAoIbWVzc2FnZXMYBCADKAsyGS5tZW1vcy5hcGkudjEuQ2hhdE1lc3NhZ2VCA+BBAhIdChBpbmNsdWRlX2NvbW1lbnRzGAcgASgIQgPgQQFKBAgBEAJKBAgCEANKBAgFEAZKBAgGEAdSC3Byb3ZpZGVyX2lkUgVtb2RlbFIVY29udGV4dF9idWRnZXRfdG9rZW5zUhVtYXhfY29tcGxldGlvbl90b2tlbnMikQEKDENoYXRQcm9wb3NhbBIwCgZhY3Rpb24YASABKA4yIC5tZW1vcy5hcGkudjEuQ2hhdFByb3Bvc2FsQWN0aW9uEg8KB2NvbnRlbnQYAiABKAkSDgoGdGFyZ2V0GAMgASgJEhsKDnRhcmdldF9jb250ZW50GAQgASgJSACIAQFCEQoPX3RhcmdldF9jb250ZW50IrQCCgxDaGF0UmVzcG9uc2USDwoHY29udGVudBgBIAEoCRItCglwcm9wb3NhbHMYAiADKAsyGi5tZW1vcy5hcGkudjEuQ2hhdFByb3Bvc2FsEhoKEmNvbnRleHRfbWVtb19jb3VudBgDIAEoAxIgChhjb250ZXh0X2VzdGltYXRlZF90b2tlbnMYBCABKAMSHQoVY29udGV4dF9idWRnZXRfdG9rZW5zGAUgASgDEhUKDXByb21wdF90b2tlbnMYBiABKAMSGQoRY29tcGxldGlvbl90b2tlbnMYByABKAMSFAoMdG90YWxfdG9rZW5zGAggASgDEg0KBW1vZGVsGAkgASgJEhEKCXRydW5jYXRlZBgKIAEoCBIdChVjb250ZXh0X2NvbW1lbnRfY291bnQYCyABKAMqcQoPQ2hhdE1lc3NhZ2VSb2xlEiEKHUNIQVRfTUVTU0FHRV9ST0xFX1VOU1BFQ0lGSUVEEAASGgoWQ0hBVF9NRVNTQUdFX1JPTEVfVVNFUhABEh8KG0NIQVRfTUVTU0FHRV9ST0xFX0FTU0lTVEFOVBACKnwKEkNoYXRQcm9wb3NhbEFjdGlvbhIkCiBDSEFUX1BST1BPU0FMX0FDVElPTl9VTlNQRUNJRklFRBAAEh8KG0NIQVRfUFJPUE9TQUxfQUNUSU9OX0NSRUFURRABEh8KG0NIQVRfUFJPUE9TQUxfQUNUSU9OX1VQREFURRACMs0FCglBSVNlcnZpY2USeQoKVHJhbnNjcmliZRIfLm1lbW9zLmFwaS52MS5UcmFuc2NyaWJlUmVxdWVzdBogLm1lbW9zLmFwaS52MS5UcmFuc2NyaWJlUmVzcG9uc2UiKNpBBWF1ZGlvgtPkkwIaOgEqIhUvYXBpL3YxL2FpOnRyYW5zY3JpYmUSngEKEkxpc3RQcm92aWRlck1vZGVscxInLm1lbW9zLmFwaS52MS5MaXN0UHJvdmlkZXJNb2RlbHNSZXF1ZXN0GigubWVtb3MuYXBpLnYxLkxpc3RQcm92aWRlck1vZGVsc1Jlc3BvbnNlIjXaQQtwcm92aWRlcl9pZILT5JMCIRIfL2FwaS92MS9haS97cHJvdmlkZXJfaWR9L21vZGVscxKeAQoTRXN0aW1hdGVDaGF0Q29udGV4dBIoLm1lbW9zLmFwaS52MS5Fc3RpbWF0ZUNoYXRDb250ZXh0UmVxdWVzdBopLm1lbW9zLmFwaS52MS5Fc3RpbWF0ZUNoYXRDb250ZXh0UmVzcG9uc2UiMtpBBmZpbHRlcoLT5JMCIzoBKiIeL2FwaS92MS9haTplc3RpbWF0ZUNoYXRDb250ZXh0EmQKBENoYXQSGS5tZW1vcy5hcGkudjEuQ2hhdFJlcXVlc3QaGi5tZW1vcy5hcGkudjEuQ2hhdFJlc3BvbnNlIiXaQQhtZXNzYWdlc4LT5JMCFDoBKiIPL2FwaS92MS9haTpjaGF0EpwBChNBbmFseXplTWVtb1NlbWFudGljEigubWVtb3MuYXBpLnYxLkFuYWx5emVNZW1vU2VtYW50aWNSZXF1ZXN0GikubWVtb3MuYXBpLnYxLkFuYWx5emVNZW1vU2VtYW50aWNSZXNwb25zZSIw2kEEbWVtb4LT5JMCIzoBKiIeL2FwaS92MS9haTphbmFseXplTWVtb1NlbWFudGljQqYBChBjb20ubWVtb3MuYXBpLnYxQg5BaVNlcnZpY2VQcm90b1ABWjBnaXRodWIuY29tL3VzZW1lbW9zL21lbW9zL3Byb3RvL2dlbi9hcGkvdjE7YXBpdjGiAgNNQViqAgxNZW1vcy5BcGkuVjHKAgxNZW1vc1xBcGlcVjHiAhhNZW1vc1xBcGlcVjFcR1BCTWV0YWRhdGHqAg5NZW1vczo6QXBpOjpWMWIGcHJvdG8z", [file_google_api_annotations, file_google_api_client, file_google_api_field_behavior]);
+
+/**
+ * @generated from message memos.api.v1.AnalyzeMemoSemanticRequest
+ */
+export type AnalyzeMemoSemanticRequest = Message<"memos.api.v1.AnalyzeMemoSemanticRequest"> & {
+  /**
+   * Required. Memo resource name in the form memos/{uid}.
+   *
+   * @generated from field: string memo = 1;
+   */
+  memo: string;
+};
+
+/**
+ * Describes the message memos.api.v1.AnalyzeMemoSemanticRequest.
+ * Use `create(AnalyzeMemoSemanticRequestSchema)` to create a new message.
+ */
+export const AnalyzeMemoSemanticRequestSchema: GenMessage<AnalyzeMemoSemanticRequest> = /*@__PURE__*/
+  messageDesc(file_api_v1_ai_service, 0);
+
+/**
+ * @generated from message memos.api.v1.AnalyzeMemoSemanticResponse
+ */
+export type AnalyzeMemoSemanticResponse = Message<"memos.api.v1.AnalyzeMemoSemanticResponse"> & {
+  /**
+   * @generated from field: double idea_probability = 1;
+   */
+  ideaProbability: number;
+
+  /**
+   * @generated from field: double task_probability = 2;
+   */
+  taskProbability: number;
+
+  /**
+   * @generated from field: double journal_probability = 3;
+   */
+  journalProbability: number;
+
+  /**
+   * @generated from field: double reference_probability = 4;
+   */
+  referenceProbability: number;
+
+  /**
+   * @generated from field: double actionable_probability = 5;
+   */
+  actionableProbability: number;
+
+  /**
+   * @generated from field: double revisit_probability = 6;
+   */
+  revisitProbability: number;
+
+  /**
+   * @generated from field: double technical_probability = 7;
+   */
+  technicalProbability: number;
+
+  /**
+   * @generated from field: double question_probability = 9;
+   */
+  questionProbability: number;
+
+  /**
+   * @generated from field: double time_sensitive_probability = 10;
+   */
+  timeSensitiveProbability: number;
+
+  /**
+   * Provider-reported resolved model.
+   *
+   * @generated from field: string model = 8;
+   */
+  model: string;
+};
+
+/**
+ * Describes the message memos.api.v1.AnalyzeMemoSemanticResponse.
+ * Use `create(AnalyzeMemoSemanticResponseSchema)` to create a new message.
+ */
+export const AnalyzeMemoSemanticResponseSchema: GenMessage<AnalyzeMemoSemanticResponse> = /*@__PURE__*/
+  messageDesc(file_api_v1_ai_service, 1);
 
 /**
  * @generated from message memos.api.v1.TranscribeRequest
@@ -32,7 +115,7 @@ export type TranscribeRequest = Message<"memos.api.v1.TranscribeRequest"> & {
  * Use `create(TranscribeRequestSchema)` to create a new message.
  */
 export const TranscribeRequestSchema: GenMessage<TranscribeRequest> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 0);
+  messageDesc(file_api_v1_ai_service, 2);
 
 /**
  * @generated from message memos.api.v1.TranscriptionAudio
@@ -79,7 +162,7 @@ export type TranscriptionAudio = Message<"memos.api.v1.TranscriptionAudio"> & {
  * Use `create(TranscriptionAudioSchema)` to create a new message.
  */
 export const TranscriptionAudioSchema: GenMessage<TranscriptionAudio> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 1);
+  messageDesc(file_api_v1_ai_service, 3);
 
 /**
  * @generated from message memos.api.v1.TranscribeResponse
@@ -98,7 +181,7 @@ export type TranscribeResponse = Message<"memos.api.v1.TranscribeResponse"> & {
  * Use `create(TranscribeResponseSchema)` to create a new message.
  */
 export const TranscribeResponseSchema: GenMessage<TranscribeResponse> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 2);
+  messageDesc(file_api_v1_ai_service, 4);
 
 /**
  * @generated from message memos.api.v1.ListProviderModelsRequest
@@ -117,7 +200,7 @@ export type ListProviderModelsRequest = Message<"memos.api.v1.ListProviderModels
  * Use `create(ListProviderModelsRequestSchema)` to create a new message.
  */
 export const ListProviderModelsRequestSchema: GenMessage<ListProviderModelsRequest> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 3);
+  messageDesc(file_api_v1_ai_service, 5);
 
 /**
  * @generated from message memos.api.v1.ListProviderModelsResponse
@@ -136,7 +219,7 @@ export type ListProviderModelsResponse = Message<"memos.api.v1.ListProviderModel
  * Use `create(ListProviderModelsResponseSchema)` to create a new message.
  */
 export const ListProviderModelsResponseSchema: GenMessage<ListProviderModelsResponse> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 4);
+  messageDesc(file_api_v1_ai_service, 6);
 
 /**
  * @generated from message memos.api.v1.AIProviderModel
@@ -163,7 +246,7 @@ export type AIProviderModel = Message<"memos.api.v1.AIProviderModel"> & {
  * Use `create(AIProviderModelSchema)` to create a new message.
  */
 export const AIProviderModelSchema: GenMessage<AIProviderModel> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 5);
+  messageDesc(file_api_v1_ai_service, 7);
 
 /**
  * @generated from message memos.api.v1.EstimateChatContextRequest
@@ -194,7 +277,7 @@ export type EstimateChatContextRequest = Message<"memos.api.v1.EstimateChatConte
  * Use `create(EstimateChatContextRequestSchema)` to create a new message.
  */
 export const EstimateChatContextRequestSchema: GenMessage<EstimateChatContextRequest> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 6);
+  messageDesc(file_api_v1_ai_service, 8);
 
 /**
  * @generated from message memos.api.v1.EstimateChatContextResponse
@@ -242,7 +325,7 @@ export type EstimateChatContextResponse = Message<"memos.api.v1.EstimateChatCont
  * Use `create(EstimateChatContextResponseSchema)` to create a new message.
  */
 export const EstimateChatContextResponseSchema: GenMessage<EstimateChatContextResponse> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 7);
+  messageDesc(file_api_v1_ai_service, 9);
 
 /**
  * @generated from message memos.api.v1.ChatMessage
@@ -267,7 +350,7 @@ export type ChatMessage = Message<"memos.api.v1.ChatMessage"> & {
  * Use `create(ChatMessageSchema)` to create a new message.
  */
 export const ChatMessageSchema: GenMessage<ChatMessage> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 8);
+  messageDesc(file_api_v1_ai_service, 10);
 
 /**
  * @generated from message memos.api.v1.ChatRequest
@@ -304,7 +387,7 @@ export type ChatRequest = Message<"memos.api.v1.ChatRequest"> & {
  * Use `create(ChatRequestSchema)` to create a new message.
  */
 export const ChatRequestSchema: GenMessage<ChatRequest> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 9);
+  messageDesc(file_api_v1_ai_service, 11);
 
 /**
  * ChatProposal is a note change the model suggested but did not perform. The
@@ -349,7 +432,7 @@ export type ChatProposal = Message<"memos.api.v1.ChatProposal"> & {
  * Use `create(ChatProposalSchema)` to create a new message.
  */
 export const ChatProposalSchema: GenMessage<ChatProposal> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 10);
+  messageDesc(file_api_v1_ai_service, 12);
 
 /**
  * @generated from message memos.api.v1.ChatResponse
@@ -436,7 +519,7 @@ export type ChatResponse = Message<"memos.api.v1.ChatResponse"> & {
  * Use `create(ChatResponseSchema)` to create a new message.
  */
 export const ChatResponseSchema: GenMessage<ChatResponse> = /*@__PURE__*/
-  messageDesc(file_api_v1_ai_service, 11);
+  messageDesc(file_api_v1_ai_service, 13);
 
 /**
  * ChatMessageRole identifies who produced a message.
@@ -547,6 +630,16 @@ export const AIService: GenService<{
     methodKind: "unary";
     input: typeof ChatRequestSchema;
     output: typeof ChatResponseSchema;
+  },
+  /**
+   * AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
+   *
+   * @generated from rpc memos.api.v1.AIService.AnalyzeMemoSemantic
+   */
+  analyzeMemoSemantic: {
+    methodKind: "unary";
+    input: typeof AnalyzeMemoSemanticRequestSchema;
+    output: typeof AnalyzeMemoSemanticResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_api_v1_ai_service, 0);

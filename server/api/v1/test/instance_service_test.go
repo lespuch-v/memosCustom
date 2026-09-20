@@ -1095,4 +1095,41 @@ func TestUpdateInstanceSetting(t *testing.T) {
 		require.Equal(t, "en", stored.GetTranscription().GetLanguage())
 		require.Equal(t, "names: Alice", stored.GetTranscription().GetPrompt())
 	})
+
+	t.Run("UpdateInstanceSetting - semantic analysis round trips and guards provider deletion", func(t *testing.T) {
+		ts := NewTestService(t)
+		defer ts.Cleanup()
+
+		hostUser, err := ts.CreateHostUser(ctx, "admin")
+		require.NoError(t, err)
+		adminCtx := ts.CreateUserContext(ctx, hostUser.ID)
+		setting := &v1pb.InstanceSetting{
+			Name: "instance/settings/AI",
+			Value: &v1pb.InstanceSetting_AiSetting{AiSetting: &v1pb.InstanceSetting_AISetting{
+				Providers: []*v1pb.InstanceSetting_AIProviderConfig{{
+					Id: "router", Title: "OpenRouter", Type: v1pb.InstanceSetting_OPENROUTER, ApiKey: "sk-router",
+				}},
+				SemanticAnalysis: &v1pb.InstanceSetting_SemanticAnalysisConfig{ProviderId: "router"},
+			}},
+		}
+		_, err = ts.Service.UpdateInstanceSetting(adminCtx, &v1pb.UpdateInstanceSettingRequest{Setting: setting})
+		require.NoError(t, err)
+
+		response, err := ts.Service.GetInstanceSetting(adminCtx, &v1pb.GetInstanceSettingRequest{Name: "instance/settings/AI"})
+		require.NoError(t, err)
+		require.Equal(t, "router", response.GetAiSetting().GetSemanticAnalysis().GetProviderId())
+		require.Empty(t, response.GetAiSetting().GetProviders()[0].GetApiKey())
+
+		setting.GetAiSetting().Providers = nil
+		setting.GetAiSetting().SemanticAnalysis = nil
+		_, err = ts.Service.UpdateInstanceSetting(adminCtx, &v1pb.UpdateInstanceSettingRequest{Setting: setting})
+		require.ErrorContains(t, err, "semantic analysis provider_id")
+
+		setting.GetAiSetting().SemanticAnalysis = &v1pb.InstanceSetting_SemanticAnalysisConfig{}
+		_, err = ts.Service.UpdateInstanceSetting(adminCtx, &v1pb.UpdateInstanceSettingRequest{Setting: setting})
+		require.NoError(t, err)
+		stored, err := ts.Store.GetInstanceAISetting(ctx)
+		require.NoError(t, err)
+		require.Empty(t, stored.GetSemanticAnalysis().GetProviderId())
+	})
 }
