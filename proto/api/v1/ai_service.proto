@@ -56,6 +56,55 @@ service AIService {
     };
     option (google.api.method_signature) = "memo";
   }
+
+  // FindRelatedMemos compares one readable memo against a bounded set of the
+  // caller's other readable memos — the most recent ones plus keyword-matched
+  // ones — with Jev judgments and returns the strongest semantic matches.
+  // Results are ephemeral and never stored.
+  rpc FindRelatedMemos(FindRelatedMemosRequest) returns (FindRelatedMemosResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/ai:findRelatedMemos"
+      body: "*"
+    };
+    option (google.api.method_signature) = "memo";
+  }
+}
+
+message FindRelatedMemosRequest {
+  // Required. The source memo resource name in the form memos/{uid}.
+  string memo = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+message RelatedMemoResult {
+  // The related memo resource name in the form memos/{uid}.
+  string memo = 1;
+
+  // Probability that the two memos are primarily about the same subject.
+  double same_topic = 2;
+
+  // Probability that they concern the same underlying problem, even when one
+  // memo states the problem and the other proposes a solution.
+  double same_problem = 3;
+
+  // Probability that one memo continues, answers, or resolves the other's
+  // thought.
+  double continuation = 4;
+
+  // Weighted combination of the three probabilities above, computed on the
+  // server so every client ranks matches the same way.
+  double relevance = 5;
+
+  // Short single-line preview of the related memo's content.
+  string snippet = 6;
+}
+
+message FindRelatedMemosResponse {
+  // Matches ordered by descending relevance. Empty when nothing cleared the
+  // relevance bar.
+  repeated RelatedMemoResult results = 1;
+
+  // Provider-reported resolved model.
+  string model = 2;
 }
 
 message AnalyzeMemoSemanticRequest {

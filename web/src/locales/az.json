@@ -18,6 +18,22 @@
     "time-sensitive": "Time-sensitive",
     "title": "Semantic analysis"
   },
+  "related-notes": {
+    "continuation": "Continuation",
+    "description": "Semantic matches found with Jev. Results are not saved.",
+    "empty": "No strongly related notes found among your recent notes.",
+    "error": "Could not find related notes.",
+    "loading": "Comparing notes…",
+    "ephemeral": "Private and not saved",
+    "match": "Related match",
+    "menu": "Find related notes",
+    "refresh": "Refresh",
+    "relevance": "Relevance",
+    "retry": "Try again",
+    "same-problem": "Same problem",
+    "same-topic": "Same topic",
+    "title": "Related notes"
+  },
   "ai": {
     "composer-hint": "Enter göndərir. Shift+Enter yeni sətir əlavə edir.",
     "composer-placeholder": "Qeydləriniz haqqında soruşun və ya yeni qeyd yazmağı xahiş edin…",

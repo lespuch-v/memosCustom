@@ -116,6 +116,35 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/Status'
+    /api/v1/ai:findRelatedMemos:
+        post:
+            tags:
+                - AIService
+            description: |-
+                FindRelatedMemos compares one readable memo against a bounded set of the
+                 caller's other readable memos — the most recent ones plus keyword-matched
+                 ones — with Jev judgments and returns the strongest semantic matches.
+                 Results are ephemeral and never stored.
+            operationId: AIService_FindRelatedMemos
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/FindRelatedMemosRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/FindRelatedMemosResponse'
+                default:
+                    description: Default error response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Status'
     /api/v1/ai:transcribe:
         post:
             tags:
@@ -3823,6 +3852,27 @@ components:
                     type: string
                 avatarUrl:
                     type: string
+        FindRelatedMemosRequest:
+            required:
+                - memo
+            type: object
+            properties:
+                memo:
+                    type: string
+                    description: Required. The source memo resource name in the form memos/{uid}.
+        FindRelatedMemosResponse:
+            type: object
+            properties:
+                results:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/RelatedMemoResult'
+                    description: |-
+                        Matches ordered by descending relevance. Empty when nothing cleared the
+                         relevance bar.
+                model:
+                    type: string
+                    description: Provider-reported resolved model.
         GeneralSetting_CustomProfile:
             type: object
             properties:
@@ -5018,6 +5068,37 @@ components:
                     type: string
                     description: When the access token expires.
                     format: date-time
+        RelatedMemoResult:
+            type: object
+            properties:
+                memo:
+                    type: string
+                    description: The related memo resource name in the form memos/{uid}.
+                sameTopic:
+                    type: number
+                    description: Probability that the two memos are primarily about the same subject.
+                    format: double
+                sameProblem:
+                    type: number
+                    description: |-
+                        Probability that they concern the same underlying problem, even when one
+                         memo states the problem and the other proposes a solution.
+                    format: double
+                continuation:
+                    type: number
+                    description: |-
+                        Probability that one memo continues, answers, or resolves the other's
+                         thought.
+                    format: double
+                relevance:
+                    type: number
+                    description: |-
+                        Weighted combination of the three probabilities above, computed on the
+                         server so every client ranks matches the same way.
+                    format: double
+                snippet:
+                    type: string
+                    description: Short single-line preview of the related memo's content.
         SetMemoAttachmentsRequest:
             required:
                 - name

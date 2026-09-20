@@ -1,8 +1,6 @@
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
-  PinIcon,
-  PinOffIcon,
   CheckCheckIcon,
   CopyIcon,
   Edit3Icon,
@@ -13,6 +11,9 @@ import {
   ListRestartIcon,
   MoreHorizontalIcon,
   MoreVerticalIcon,
+  NetworkIcon,
+  PinIcon,
+  PinOffIcon,
   TrashIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -27,23 +28,28 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useOptionalSemanticAnalysis } from "@/contexts/SemanticAnalysisContext";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { useTranslate } from "@/utils/i18n";
 import { useMemoActionHandlers } from "./hooks";
 import MemoMoveDialog from "./MemoMoveDialog";
+import RelatedNotesDialog from "./RelatedNotesDialog";
 import type { MemoActionMenuProps } from "./types";
 
 const MemoActionMenu = (props: MemoActionMenuProps) => {
   const { memo, readonly } = props;
   const t = useTranslate();
+  const analysis = useOptionalSemanticAnalysis();
 
   // Dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [relatedNotesOpen, setRelatedNotesOpen] = useState(false);
 
   // Derived state
   const isComment = Boolean(memo.parent);
   const isArchived = memo.state === State.ARCHIVED;
+  const canFindRelatedNotes = Boolean(analysis?.enabled);
   const canMutateTasks = !readonly && !isArchived && Boolean(memo.property?.hasTaskList);
   const hasOpenTasks = Boolean(memo.property?.hasIncompleteTasks);
 
@@ -86,6 +92,14 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
               {t("common.edit")}
             </DropdownMenuItem>
           </>
+        )}
+
+        {/* Semantic related notes (when the instance configures Jev) */}
+        {canFindRelatedNotes && (
+          <DropdownMenuItem onClick={() => setRelatedNotesOpen(true)}>
+            <NetworkIcon />
+            {t("related-notes.menu")}
+          </DropdownMenuItem>
         )}
 
         {/* Copy submenu (non-archived) */}
@@ -160,6 +174,8 @@ const MemoActionMenu = (props: MemoActionMenuProps) => {
       </DropdownMenuContent>
 
       {moveDialogOpen && <MemoMoveDialog memo={memo} onOpenChange={setMoveDialogOpen} />}
+
+      {relatedNotesOpen && <RelatedNotesDialog memo={memo} onOpenChange={setRelatedNotesOpen} />}
 
       {/* Delete confirmation dialog */}
       <ConfirmDialog

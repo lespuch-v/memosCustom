@@ -46,6 +46,9 @@ const (
 	// AIServiceAnalyzeMemoSemanticProcedure is the fully-qualified name of the AIService's
 	// AnalyzeMemoSemantic RPC.
 	AIServiceAnalyzeMemoSemanticProcedure = "/memos.api.v1.AIService/AnalyzeMemoSemantic"
+	// AIServiceFindRelatedMemosProcedure is the fully-qualified name of the AIService's
+	// FindRelatedMemos RPC.
+	AIServiceFindRelatedMemosProcedure = "/memos.api.v1.AIService/FindRelatedMemos"
 )
 
 // AIServiceClient is a client for the memos.api.v1.AIService service.
@@ -66,6 +69,11 @@ type AIServiceClient interface {
 	Chat(context.Context, *connect.Request[v1.ChatRequest]) (*connect.Response[v1.ChatResponse], error)
 	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
 	AnalyzeMemoSemantic(context.Context, *connect.Request[v1.AnalyzeMemoSemanticRequest]) (*connect.Response[v1.AnalyzeMemoSemanticResponse], error)
+	// FindRelatedMemos compares one readable memo against a bounded set of the
+	// caller's other readable memos — the most recent ones plus keyword-matched
+	// ones — with Jev judgments and returns the strongest semantic matches.
+	// Results are ephemeral and never stored.
+	FindRelatedMemos(context.Context, *connect.Request[v1.FindRelatedMemosRequest]) (*connect.Response[v1.FindRelatedMemosResponse], error)
 }
 
 // NewAIServiceClient constructs a client for the memos.api.v1.AIService service. By default, it
@@ -109,6 +117,12 @@ func NewAIServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...c
 			connect.WithSchema(aIServiceMethods.ByName("AnalyzeMemoSemantic")),
 			connect.WithClientOptions(opts...),
 		),
+		findRelatedMemos: connect.NewClient[v1.FindRelatedMemosRequest, v1.FindRelatedMemosResponse](
+			httpClient,
+			baseURL+AIServiceFindRelatedMemosProcedure,
+			connect.WithSchema(aIServiceMethods.ByName("FindRelatedMemos")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -119,6 +133,7 @@ type aIServiceClient struct {
 	estimateChatContext *connect.Client[v1.EstimateChatContextRequest, v1.EstimateChatContextResponse]
 	chat                *connect.Client[v1.ChatRequest, v1.ChatResponse]
 	analyzeMemoSemantic *connect.Client[v1.AnalyzeMemoSemanticRequest, v1.AnalyzeMemoSemanticResponse]
+	findRelatedMemos    *connect.Client[v1.FindRelatedMemosRequest, v1.FindRelatedMemosResponse]
 }
 
 // Transcribe calls memos.api.v1.AIService.Transcribe.
@@ -146,6 +161,11 @@ func (c *aIServiceClient) AnalyzeMemoSemantic(ctx context.Context, req *connect.
 	return c.analyzeMemoSemantic.CallUnary(ctx, req)
 }
 
+// FindRelatedMemos calls memos.api.v1.AIService.FindRelatedMemos.
+func (c *aIServiceClient) FindRelatedMemos(ctx context.Context, req *connect.Request[v1.FindRelatedMemosRequest]) (*connect.Response[v1.FindRelatedMemosResponse], error) {
+	return c.findRelatedMemos.CallUnary(ctx, req)
+}
+
 // AIServiceHandler is an implementation of the memos.api.v1.AIService service.
 type AIServiceHandler interface {
 	// Transcribe transcribes an audio file using an instance AI provider.
@@ -164,6 +184,11 @@ type AIServiceHandler interface {
 	Chat(context.Context, *connect.Request[v1.ChatRequest]) (*connect.Response[v1.ChatResponse], error)
 	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
 	AnalyzeMemoSemantic(context.Context, *connect.Request[v1.AnalyzeMemoSemanticRequest]) (*connect.Response[v1.AnalyzeMemoSemanticResponse], error)
+	// FindRelatedMemos compares one readable memo against a bounded set of the
+	// caller's other readable memos — the most recent ones plus keyword-matched
+	// ones — with Jev judgments and returns the strongest semantic matches.
+	// Results are ephemeral and never stored.
+	FindRelatedMemos(context.Context, *connect.Request[v1.FindRelatedMemosRequest]) (*connect.Response[v1.FindRelatedMemosResponse], error)
 }
 
 // NewAIServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -203,6 +228,12 @@ func NewAIServiceHandler(svc AIServiceHandler, opts ...connect.HandlerOption) (s
 		connect.WithSchema(aIServiceMethods.ByName("AnalyzeMemoSemantic")),
 		connect.WithHandlerOptions(opts...),
 	)
+	aIServiceFindRelatedMemosHandler := connect.NewUnaryHandler(
+		AIServiceFindRelatedMemosProcedure,
+		svc.FindRelatedMemos,
+		connect.WithSchema(aIServiceMethods.ByName("FindRelatedMemos")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/memos.api.v1.AIService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AIServiceTranscribeProcedure:
@@ -215,6 +246,8 @@ func NewAIServiceHandler(svc AIServiceHandler, opts ...connect.HandlerOption) (s
 			aIServiceChatHandler.ServeHTTP(w, r)
 		case AIServiceAnalyzeMemoSemanticProcedure:
 			aIServiceAnalyzeMemoSemanticHandler.ServeHTTP(w, r)
+		case AIServiceFindRelatedMemosProcedure:
+			aIServiceFindRelatedMemosHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -242,4 +275,8 @@ func (UnimplementedAIServiceHandler) Chat(context.Context, *connect.Request[v1.C
 
 func (UnimplementedAIServiceHandler) AnalyzeMemoSemantic(context.Context, *connect.Request[v1.AnalyzeMemoSemanticRequest]) (*connect.Response[v1.AnalyzeMemoSemanticResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.AIService.AnalyzeMemoSemantic is not implemented"))
+}
+
+func (UnimplementedAIServiceHandler) FindRelatedMemos(context.Context, *connect.Request[v1.FindRelatedMemosRequest]) (*connect.Response[v1.FindRelatedMemosResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("memos.api.v1.AIService.FindRelatedMemos is not implemented"))
 }
