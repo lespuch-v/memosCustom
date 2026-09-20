@@ -797,6 +797,14 @@ func (s *ConnectServiceHandler) AnalyzeMemoSemantic(ctx context.Context, req *co
 	return connect.NewResponse(resp), nil
 }
 
+func (s *ConnectServiceHandler) FindRelatedMemos(ctx context.Context, req *connect.Request[v1pb.FindRelatedMemosRequest]) (*connect.Response[v1pb.FindRelatedMemosResponse], error) {
+	resp, err := s.APIV1Service.FindRelatedMemos(ctx, req.Msg)
+	if err != nil {
+		return nil, convertGRPCError(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
 // IdentityProviderService
 
 func (s *ConnectServiceHandler) ListIdentityProviders(ctx context.Context, req *connect.Request[v1pb.ListIdentityProvidersRequest]) (*connect.Response[v1pb.ListIdentityProvidersResponse], error) {

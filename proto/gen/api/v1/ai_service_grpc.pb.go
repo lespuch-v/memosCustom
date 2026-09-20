@@ -24,6 +24,7 @@ const (
 	AIService_EstimateChatContext_FullMethodName = "/memos.api.v1.AIService/EstimateChatContext"
 	AIService_Chat_FullMethodName                = "/memos.api.v1.AIService/Chat"
 	AIService_AnalyzeMemoSemantic_FullMethodName = "/memos.api.v1.AIService/AnalyzeMemoSemantic"
+	AIService_FindRelatedMemos_FullMethodName    = "/memos.api.v1.AIService/FindRelatedMemos"
 )
 
 // AIServiceClient is the client API for AIService service.
@@ -46,6 +47,11 @@ type AIServiceClient interface {
 	Chat(ctx context.Context, in *ChatRequest, opts ...grpc.CallOption) (*ChatResponse, error)
 	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
 	AnalyzeMemoSemantic(ctx context.Context, in *AnalyzeMemoSemanticRequest, opts ...grpc.CallOption) (*AnalyzeMemoSemanticResponse, error)
+	// FindRelatedMemos compares one readable memo against a bounded set of the
+	// caller's other readable memos — the most recent ones plus keyword-matched
+	// ones — with Jev judgments and returns the strongest semantic matches.
+	// Results are ephemeral and never stored.
+	FindRelatedMemos(ctx context.Context, in *FindRelatedMemosRequest, opts ...grpc.CallOption) (*FindRelatedMemosResponse, error)
 }
 
 type aIServiceClient struct {
@@ -106,6 +112,16 @@ func (c *aIServiceClient) AnalyzeMemoSemantic(ctx context.Context, in *AnalyzeMe
 	return out, nil
 }
 
+func (c *aIServiceClient) FindRelatedMemos(ctx context.Context, in *FindRelatedMemosRequest, opts ...grpc.CallOption) (*FindRelatedMemosResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FindRelatedMemosResponse)
+	err := c.cc.Invoke(ctx, AIService_FindRelatedMemos_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AIServiceServer is the server API for AIService service.
 // All implementations must embed UnimplementedAIServiceServer
 // for forward compatibility.
@@ -126,6 +142,11 @@ type AIServiceServer interface {
 	Chat(context.Context, *ChatRequest) (*ChatResponse, error)
 	// AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
 	AnalyzeMemoSemantic(context.Context, *AnalyzeMemoSemanticRequest) (*AnalyzeMemoSemanticResponse, error)
+	// FindRelatedMemos compares one readable memo against a bounded set of the
+	// caller's other readable memos — the most recent ones plus keyword-matched
+	// ones — with Jev judgments and returns the strongest semantic matches.
+	// Results are ephemeral and never stored.
+	FindRelatedMemos(context.Context, *FindRelatedMemosRequest) (*FindRelatedMemosResponse, error)
 	mustEmbedUnimplementedAIServiceServer()
 }
 
@@ -150,6 +171,9 @@ func (UnimplementedAIServiceServer) Chat(context.Context, *ChatRequest) (*ChatRe
 }
 func (UnimplementedAIServiceServer) AnalyzeMemoSemantic(context.Context, *AnalyzeMemoSemanticRequest) (*AnalyzeMemoSemanticResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method AnalyzeMemoSemantic not implemented")
+}
+func (UnimplementedAIServiceServer) FindRelatedMemos(context.Context, *FindRelatedMemosRequest) (*FindRelatedMemosResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method FindRelatedMemos not implemented")
 }
 func (UnimplementedAIServiceServer) mustEmbedUnimplementedAIServiceServer() {}
 func (UnimplementedAIServiceServer) testEmbeddedByValue()                   {}
@@ -262,6 +286,24 @@ func _AIService_AnalyzeMemoSemantic_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AIService_FindRelatedMemos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindRelatedMemosRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).FindRelatedMemos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_FindRelatedMemos_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).FindRelatedMemos(ctx, req.(*FindRelatedMemosRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AIService_ServiceDesc is the grpc.ServiceDesc for AIService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -288,6 +330,10 @@ var AIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AnalyzeMemoSemantic",
 			Handler:    _AIService_AnalyzeMemoSemantic_Handler,
+		},
+		{
+			MethodName: "FindRelatedMemos",
+			Handler:    _AIService_FindRelatedMemos_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
