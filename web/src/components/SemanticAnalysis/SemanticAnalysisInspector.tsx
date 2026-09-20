@@ -15,7 +15,7 @@ const judgments = [
   ["technical", "technicalProbability"],
 ] as const;
 
-const InspectorBody = () => {
+export const SemanticAnalysisInspectorBody = () => {
   const t = useTranslate();
   const { result, status, error, refresh } = useSemanticAnalysis();
   if (status === "loading" && !result) {
@@ -41,13 +41,10 @@ const InspectorBody = () => {
 
 const SemanticAnalysisInspector = () => {
   const t = useTranslate();
-  const desktop = useMediaQuery("xl");
+  const desktop = useMediaQuery("sm");
   const { open, close } = useSemanticAnalysis();
-  if (!open) return null;
-  if (desktop) {
-    return <aside aria-label={t("semantic-analysis.title")} className="fixed end-6 top-20 z-40 w-80 rounded-xl border border-border bg-background p-4 shadow-xl"><div className="mb-1 flex items-center gap-2 font-semibold"><SparklesIcon className="size-4 text-indigo-500" />{t("semantic-analysis.title")}</div><p className="mb-5 text-xs text-muted-foreground">{t("semantic-analysis.ephemeral")}</p><InspectorBody /><Button variant="ghost" size="icon-sm" className="absolute end-2 top-2" onClick={close} aria-label={t("common.close")}>×</Button></aside>;
-  }
-  return <Sheet open={open} onOpenChange={(next) => !next && close()}><SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-4"><SheetHeader className="p-0"><SheetTitle className="flex items-center gap-2"><SparklesIcon className="size-4 text-indigo-500" />{t("semantic-analysis.title")}</SheetTitle><SheetDescription>{t("semantic-analysis.ephemeral")}</SheetDescription></SheetHeader><InspectorBody /></SheetContent></Sheet>;
+  if (desktop || !open) return null;
+  return <Sheet open={open} onOpenChange={(next) => !next && close()}><SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-4"><SheetHeader className="p-0"><SheetTitle className="flex items-center gap-2"><SparklesIcon className="size-4 text-indigo-500" />{t("semantic-analysis.title")}</SheetTitle><SheetDescription>{t("semantic-analysis.ephemeral")}</SheetDescription></SheetHeader><SemanticAnalysisInspectorBody /></SheetContent></Sheet>;
 };
 
 export default SemanticAnalysisInspector;
