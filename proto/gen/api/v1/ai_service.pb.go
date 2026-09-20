@@ -170,14 +170,16 @@ func (x *AnalyzeMemoSemanticRequest) GetMemo() string {
 }
 
 type AnalyzeMemoSemanticResponse struct {
-	state                 protoimpl.MessageState `protogen:"open.v1"`
-	IdeaProbability       float64                `protobuf:"fixed64,1,opt,name=idea_probability,json=ideaProbability,proto3" json:"idea_probability,omitempty"`
-	TaskProbability       float64                `protobuf:"fixed64,2,opt,name=task_probability,json=taskProbability,proto3" json:"task_probability,omitempty"`
-	JournalProbability    float64                `protobuf:"fixed64,3,opt,name=journal_probability,json=journalProbability,proto3" json:"journal_probability,omitempty"`
-	ReferenceProbability  float64                `protobuf:"fixed64,4,opt,name=reference_probability,json=referenceProbability,proto3" json:"reference_probability,omitempty"`
-	ActionableProbability float64                `protobuf:"fixed64,5,opt,name=actionable_probability,json=actionableProbability,proto3" json:"actionable_probability,omitempty"`
-	RevisitProbability    float64                `protobuf:"fixed64,6,opt,name=revisit_probability,json=revisitProbability,proto3" json:"revisit_probability,omitempty"`
-	TechnicalProbability  float64                `protobuf:"fixed64,7,opt,name=technical_probability,json=technicalProbability,proto3" json:"technical_probability,omitempty"`
+	state                    protoimpl.MessageState `protogen:"open.v1"`
+	IdeaProbability          float64                `protobuf:"fixed64,1,opt,name=idea_probability,json=ideaProbability,proto3" json:"idea_probability,omitempty"`
+	TaskProbability          float64                `protobuf:"fixed64,2,opt,name=task_probability,json=taskProbability,proto3" json:"task_probability,omitempty"`
+	JournalProbability       float64                `protobuf:"fixed64,3,opt,name=journal_probability,json=journalProbability,proto3" json:"journal_probability,omitempty"`
+	ReferenceProbability     float64                `protobuf:"fixed64,4,opt,name=reference_probability,json=referenceProbability,proto3" json:"reference_probability,omitempty"`
+	ActionableProbability    float64                `protobuf:"fixed64,5,opt,name=actionable_probability,json=actionableProbability,proto3" json:"actionable_probability,omitempty"`
+	RevisitProbability       float64                `protobuf:"fixed64,6,opt,name=revisit_probability,json=revisitProbability,proto3" json:"revisit_probability,omitempty"`
+	TechnicalProbability     float64                `protobuf:"fixed64,7,opt,name=technical_probability,json=technicalProbability,proto3" json:"technical_probability,omitempty"`
+	QuestionProbability      float64                `protobuf:"fixed64,9,opt,name=question_probability,json=questionProbability,proto3" json:"question_probability,omitempty"`
+	TimeSensitiveProbability float64                `protobuf:"fixed64,10,opt,name=time_sensitive_probability,json=timeSensitiveProbability,proto3" json:"time_sensitive_probability,omitempty"`
 	// Provider-reported resolved model.
 	Model         string `protobuf:"bytes,8,opt,name=model,proto3" json:"model,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -259,6 +261,20 @@ func (x *AnalyzeMemoSemanticResponse) GetRevisitProbability() float64 {
 func (x *AnalyzeMemoSemanticResponse) GetTechnicalProbability() float64 {
 	if x != nil {
 		return x.TechnicalProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetQuestionProbability() float64 {
+	if x != nil {
+		return x.QuestionProbability
+	}
+	return 0
+}
+
+func (x *AnalyzeMemoSemanticResponse) GetTimeSensitiveProbability() float64 {
+	if x != nil {
+		return x.TimeSensitiveProbability
 	}
 	return 0
 }
@@ -1087,7 +1103,7 @@ const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\n" +
 	"\x17api/v1/ai_service.proto\x12\fmemos.api.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\"5\n" +
 	"\x1aAnalyzeMemoSemanticRequest\x12\x17\n" +
-	"\x04memo\x18\x01 \x01(\tB\x03\xe0A\x02R\x04memo\"\x8c\x03\n" +
+	"\x04memo\x18\x01 \x01(\tB\x03\xe0A\x02R\x04memo\"\xfd\x03\n" +
 	"\x1bAnalyzeMemoSemanticResponse\x12)\n" +
 	"\x10idea_probability\x18\x01 \x01(\x01R\x0fideaProbability\x12)\n" +
 	"\x10task_probability\x18\x02 \x01(\x01R\x0ftaskProbability\x12/\n" +
@@ -1095,7 +1111,10 @@ const file_api_v1_ai_service_proto_rawDesc = "" +
 	"\x15reference_probability\x18\x04 \x01(\x01R\x14referenceProbability\x125\n" +
 	"\x16actionable_probability\x18\x05 \x01(\x01R\x15actionableProbability\x12/\n" +
 	"\x13revisit_probability\x18\x06 \x01(\x01R\x12revisitProbability\x123\n" +
-	"\x15technical_probability\x18\a \x01(\x01R\x14technicalProbability\x12\x14\n" +
+	"\x15technical_probability\x18\a \x01(\x01R\x14technicalProbability\x121\n" +
+	"\x14question_probability\x18\t \x01(\x01R\x13questionProbability\x12<\n" +
+	"\x1atime_sensitive_probability\x18\n" +
+	" \x01(\x01R\x18timeSensitiveProbability\x12\x14\n" +
 	"\x05model\x18\b \x01(\tR\x05model\"P\n" +
 	"\x11TranscribeRequest\x12;\n" +
 	"\x05audio\x18\x01 \x01(\v2 .memos.api.v1.TranscriptionAudioB\x03\xe0A\x02R\x05audio\"\x9c\x01\n" +

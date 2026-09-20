@@ -71,6 +71,8 @@ message AnalyzeMemoSemanticResponse {
   double actionable_probability = 5;
   double revisit_probability = 6;
   double technical_probability = 7;
+  double question_probability = 9;
+  double time_sensitive_probability = 10;
   // Provider-reported resolved model.
   string model = 8;
 }

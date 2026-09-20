@@ -20,13 +20,15 @@ import (
 const semanticAnalysisModel = "~typesafe/jev-latest"
 
 var semanticAnalysisQuestions = map[string]decision.Question{
-	"is_idea":          {Type: "noul", Instructions: "Does this memo express or develop an idea, possibility, hypothesis, or proposed direction?"},
-	"is_task":          {Type: "noul", Instructions: "Does this memo describe a task, commitment, reminder, or concrete piece of work to complete?"},
-	"is_journal":       {Type: "noul", Instructions: "Is this memo primarily a personal record of experiences, events, observations, or reflections?"},
-	"is_reference":     {Type: "noul", Instructions: "Is this memo primarily information preserved for later lookup or reference?"},
-	"is_actionable":    {Type: "noul", Instructions: "Does this memo imply at least one concrete action that its reader could take?"},
-	"worth_revisiting": {Type: "noul", Instructions: "Would revisiting this memo later likely provide useful follow-up, reflection, or reference value?"},
-	"is_technical":     {Type: "noul", Instructions: "Is this memo primarily about software, computing, engineering, or another technical subject?"},
+	"is_idea":           {Type: "noul", Instructions: "Does this memo express or develop an idea, possibility, hypothesis, or proposed direction?"},
+	"is_task":           {Type: "noul", Instructions: "Does this memo describe a task, commitment, reminder, or concrete piece of work to complete?"},
+	"is_journal":        {Type: "noul", Instructions: "Is this memo primarily a personal record of experiences, events, observations, or reflections?"},
+	"is_reference":      {Type: "noul", Instructions: "Is this memo primarily information preserved for later lookup or reference?"},
+	"is_actionable":     {Type: "noul", Instructions: "Does this memo imply at least one concrete action that its reader could take?"},
+	"is_time_sensitive": {Type: "noul", Instructions: "Is this memo tied to a specific deadline, date, or window of time after which it loses relevance?"},
+	"is_question":       {Type: "noul", Instructions: "Does this memo pose an open question or unsolved problem seeking an answer?"},
+	"worth_revisiting":  {Type: "noul", Instructions: "Would revisiting this memo later likely provide useful follow-up, reflection, or reference value?"},
+	"is_technical":      {Type: "noul", Instructions: "Is this memo primarily about software, computing, engineering, or another technical subject?"},
 }
 
 // AnalyzeMemoSemantic returns ephemeral Jev judgments for one readable memo.
@@ -74,6 +76,7 @@ func (s *APIV1Service) AnalyzeMemoSemantic(ctx context.Context, request *v1pb.An
 	return &v1pb.AnalyzeMemoSemanticResponse{
 		IdeaProbability: answer("is_idea"), TaskProbability: answer("is_task"), JournalProbability: answer("is_journal"),
 		ReferenceProbability: answer("is_reference"), ActionableProbability: answer("is_actionable"),
+		TimeSensitiveProbability: answer("is_time_sensitive"), QuestionProbability: answer("is_question"),
 		RevisitProbability: answer("worth_revisiting"), TechnicalProbability: answer("is_technical"), Model: result.Model,
 	}, nil
 }

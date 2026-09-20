@@ -23,7 +23,7 @@ func TestAnalyzeMemoSemantic(t *testing.T) {
 		require.ErrorContains(t, err, "user not authenticated")
 	})
 
-	t.Run("sends one memo and seven fixed noul questions", func(t *testing.T) {
+	t.Run("sends one memo and nine fixed noul questions", func(t *testing.T) {
 		ts := NewTestService(t)
 		defer ts.Cleanup()
 		user, err := ts.CreateRegularUser(ctx, "semantic-user")
@@ -47,10 +47,11 @@ func TestAnalyzeMemoSemantic(t *testing.T) {
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 			require.Equal(t, "~typesafe/jev-latest", body.Model)
 			require.Equal(t, memo.Content, body.State)
-			require.Len(t, body.Questions, 7)
+			require.Len(t, body.Questions, 9)
+			require.Equal(t, "Does this memo pose an open question or unsolved problem seeking an answer?", body.Questions["is_question"].Instructions)
 			require.Equal(t, "Does this memo imply at least one concrete action that its reader could take?", body.Questions["is_actionable"].Instructions)
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"model":"typesafe/jev-1.13","answers":{"is_idea":{"type":"noul","noul":0.91},"is_task":{"type":"noul","noul":0.82},"is_journal":{"type":"noul","noul":0.1},"is_reference":{"type":"noul","noul":0.4},"is_actionable":{"type":"noul","noul":0.88},"worth_revisiting":{"type":"noul","noul":0.77},"is_technical":{"type":"noul","noul":0.95}}}`))
+			_, _ = w.Write([]byte(`{"model":"typesafe/jev-1.13","answers":{"is_idea":{"type":"noul","noul":0.91},"is_task":{"type":"noul","noul":0.82},"is_journal":{"type":"noul","noul":0.1},"is_reference":{"type":"noul","noul":0.4},"is_actionable":{"type":"noul","noul":0.88},"worth_revisiting":{"type":"noul","noul":0.77},"is_technical":{"type":"noul","noul":0.95},"is_question":{"type":"noul","noul":0.05},"is_time_sensitive":{"type":"noul","noul":0.6}}}`))
 		}))
 		defer server.Close()
 		_, err = ts.Store.UpsertInstanceSetting(ctx, &storepb.InstanceSetting{Key: storepb.InstanceSettingKey_AI, Value: &storepb.InstanceSetting_AiSetting{AiSetting: &storepb.InstanceAISetting{
@@ -64,6 +65,8 @@ func TestAnalyzeMemoSemantic(t *testing.T) {
 		require.True(t, called)
 		require.Equal(t, 0.91, response.IdeaProbability)
 		require.Equal(t, 0.88, response.ActionableProbability)
+		require.Equal(t, 0.05, response.QuestionProbability)
+		require.Equal(t, 0.6, response.TimeSensitiveProbability)
 		require.Equal(t, "typesafe/jev-1.13", response.Model)
 	})
 

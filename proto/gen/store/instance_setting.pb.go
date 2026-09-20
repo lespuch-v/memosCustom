@@ -1423,6 +1423,7 @@ type ChatConfig struct {
 	// OPENROUTER examples:
 	//   - anthropic/claude-sonnet-4
 	//   - openai/gpt-4o-mini
+	//
 	// DEEPINFRA examples:
 	//   - meta-llama/Meta-Llama-3.1-8B-Instruct
 	Model string `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
@@ -1505,6 +1506,7 @@ type TranscriptionConfig struct {
 	//   - whisper-1 (legacy, lower cost)
 	//   - gpt-4o-transcribe, gpt-4o-mini-transcribe (higher quality)
 	//   - gpt-4o-transcribe-diarize (includes speaker labels)
+	//
 	// GEMINI examples:
 	//   - gemini-2.5-flash (default, multimodal call)
 	//   - gemini-2.5-pro
