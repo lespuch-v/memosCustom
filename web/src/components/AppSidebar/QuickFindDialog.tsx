@@ -110,6 +110,19 @@ const QuickFindDialog = () => {
     setQuery(active.query);
   }, [filters, quickFindOpen]);
 
+  // Ctrl/Cmd+K toggles quick find from anywhere in the app.
+  useEffect(() => {
+    const handleShortcut = (event: globalThis.KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "k" || !(event.ctrlKey || event.metaKey)) return;
+      // A keyup that commits an IME composition must not also toggle the dialog.
+      if (event.isComposing) return;
+      event.preventDefault();
+      setQuickFindOpen(!quickFindOpen);
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [quickFindOpen, setQuickFindOpen]);
+
   const submitQuery = () => {
     const submission = resolveQuickFindSubmission(location.pathname, query, filters, mode);
 

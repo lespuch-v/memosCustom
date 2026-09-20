@@ -55,6 +55,7 @@ import { collectionPathForLocation, ROUTES } from "@/router/routes";
 import { State } from "@/types/proto/api/v1/common_pb";
 import { User_Role, UserNotification_Status } from "@/types/proto/api/v1/user_service_pb";
 import { useTranslate } from "@/utils/i18n";
+import { primaryModifierGlyph } from "@/utils/platform";
 import MemosLogo from "../MemosLogo";
 import CommonSidebarContent from "./CommonSidebarContent";
 import HabitsSidebarContent from "./HabitsSidebarContent";
@@ -566,7 +567,9 @@ const GlobalNavigation = () => {
               <SearchIcon className="size-4 opacity-75" strokeWidth={1.8} />
             </span>
           </TooltipTrigger>
-          <TooltipContent side="bottom">{t("common.search")}</TooltipContent>
+          <TooltipContent side="bottom">
+            {t("common.search")} <kbd className="font-sans text-2xs text-muted-foreground">{primaryModifierGlyph()} K</kbd>
+          </TooltipContent>
         </Tooltip>
       </nav>
     </TooltipProvider>
