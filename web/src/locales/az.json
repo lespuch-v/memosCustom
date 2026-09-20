@@ -7,12 +7,15 @@
     "idea": "Idea",
     "journal": "Journal",
     "loading": "Reading this note…",
+    "no-signals": "No notable signals in this note.",
     "open": "Inspect semantics",
+    "question": "Question",
     "reference": "Reference",
     "retry": "Try again",
     "revisit": "Worth revisiting",
     "task": "Task",
     "technical": "Technical / software",
+    "time-sensitive": "Time-sensitive",
     "title": "Semantic analysis"
   },
   "ai": {
