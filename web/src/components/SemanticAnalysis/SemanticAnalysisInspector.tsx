@@ -1,9 +1,11 @@
-import { Loader2Icon, RefreshCwIcon, SparklesIcon } from "lucide-react";
+import { Loader2Icon, RefreshCwIcon, SparklesIcon, XIcon } from "lucide-react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useSemanticAnalysis } from "@/contexts/SemanticAnalysisContext";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { useTranslate } from "@/utils/i18n";
+import { getSemanticAnalysisPlacement, type SemanticAnalysisPlacement } from "./placement";
 
 const judgments = [
   ["idea", "ideaProbability"],
@@ -42,8 +44,29 @@ export const SemanticAnalysisInspectorBody = () => {
 const SemanticAnalysisInspector = () => {
   const t = useTranslate();
   const desktop = useMediaQuery("sm");
-  const { open, close } = useSemanticAnalysis();
-  if (desktop || !open) return null;
+  const { anchorRef, open, close } = useSemanticAnalysis();
+  const [placement, setPlacement] = useState<SemanticAnalysisPlacement>();
+  const updatePlacement = useCallback(() => {
+    const anchor = anchorRef.current;
+    if (anchor) setPlacement(getSemanticAnalysisPlacement(anchor.getBoundingClientRect(), window));
+  }, [anchorRef]);
+
+  useLayoutEffect(() => {
+    if (!open || !desktop) return;
+    updatePlacement();
+    window.addEventListener("resize", updatePlacement);
+    window.addEventListener("scroll", updatePlacement, true);
+    return () => {
+      window.removeEventListener("resize", updatePlacement);
+      window.removeEventListener("scroll", updatePlacement, true);
+    };
+  }, [desktop, open, updatePlacement]);
+
+  if (!open) return null;
+  if (desktop) {
+    if (!placement) return null;
+    return <aside aria-label={t("semantic-analysis.title")} className="fixed z-dropdown max-h-[calc(100dvh-2rem)] w-80 overflow-y-auto rounded-xl border border-border bg-background p-4 shadow-xl" style={{ left: placement.left, top: placement.top }}><div className="mb-1 flex items-center gap-2 font-semibold"><SparklesIcon className="size-4 text-indigo-500" />{t("semantic-analysis.title")}</div><p className="mb-5 text-xs text-muted-foreground">{t("semantic-analysis.ephemeral")}</p><SemanticAnalysisInspectorBody /><Button variant="ghost" size="icon-sm" className="absolute end-2 top-2" onClick={close} aria-label={t("common.close")}><XIcon className="size-4" /></Button></aside>;
+  }
   return <Sheet open={open} onOpenChange={(next) => !next && close()}><SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-2xl p-4"><SheetHeader className="p-0"><SheetTitle className="flex items-center gap-2"><SparklesIcon className="size-4 text-indigo-500" />{t("semantic-analysis.title")}</SheetTitle><SheetDescription>{t("semantic-analysis.ephemeral")}</SheetDescription></SheetHeader><SemanticAnalysisInspectorBody /></SheetContent></Sheet>;
 };
 

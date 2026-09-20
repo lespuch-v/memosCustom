@@ -1,5 +1,5 @@
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import { createContext, useContext } from "react";
+import { createContext, type RefObject, useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { useView } from "@/contexts/ViewContext";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
@@ -15,6 +15,7 @@ export interface MemoViewContextValue {
   currentUser: User | undefined;
   parentPage: string;
   cardWidth: number;
+  cardRef?: RefObject<HTMLDivElement | null>;
   isArchived: boolean;
   readonly: boolean;
   showBlurredContent: boolean;

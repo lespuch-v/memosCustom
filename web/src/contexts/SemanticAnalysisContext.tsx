@@ -15,11 +15,12 @@ interface SemanticAnalysisContextValue {
   result?: AnalyzeMemoSemanticResponse;
   status: AnalysisState;
   error?: string;
-  openForMemo: (memo: Memo, trigger?: HTMLElement) => void;
+  openForMemo: (memo: Memo, trigger?: HTMLElement, anchor?: HTMLElement | null) => void;
   syncMemo: (memo: Memo) => void;
   close: () => void;
   refresh: () => void;
   triggerRef: RefObject<HTMLElement | null>;
+  anchorRef: RefObject<HTMLElement | null>;
 }
 
 const SemanticAnalysisContext = createContext<SemanticAnalysisContextValue | null>(null);
@@ -36,6 +37,7 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
   const cacheRef = useRef(new Map<string, AnalyzeMemoSemanticResponse>());
   const requestRef = useRef(0);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const anchorRef = useRef<HTMLElement | null>(null);
 
   const analyze = useCallback(async (target: Memo, bypassCache = false) => {
     const request = ++requestRef.current;
@@ -67,8 +69,9 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
   }, []);
 
   const openForMemo = useCallback(
-    (target: Memo, trigger?: HTMLElement) => {
+    (target: Memo, trigger?: HTMLElement, anchor?: HTMLElement | null) => {
       triggerRef.current = trigger ?? null;
+      anchorRef.current = anchor ?? trigger ?? null;
       setMemo(target);
       setOpen(true);
       void analyze(target);
@@ -96,7 +99,7 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
   }, [analyze, memo]);
 
   const value = useMemo(
-    () => ({ enabled: !!aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, syncMemo, close, refresh, triggerRef }),
+    () => ({ enabled: !!aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, syncMemo, close, refresh, triggerRef, anchorRef }),
     [aiSetting?.semanticAnalysis?.providerId, open, memo, result, status, error, openForMemo, syncMemo, close, refresh],
   );
   return <SemanticAnalysisContext.Provider value={value}>{children}</SemanticAnalysisContext.Provider>;
