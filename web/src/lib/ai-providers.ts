@@ -19,6 +19,9 @@ export const CHAT_CAPABLE_PROVIDER_TYPES: readonly InstanceSetting_AIProviderTyp
   InstanceSetting_AIProviderType.DEEPINFRA,
 ];
 
+/** The model used for chat when the instance has not saved a model override. */
+export const DEFAULT_CHAT_MODEL = "z-ai/glm-5.3-flash";
+
 /** Provider types implemented by the transcription service. */
 export const TRANSCRIPTION_CAPABLE_PROVIDER_TYPES: readonly InstanceSetting_AIProviderType[] = [
   InstanceSetting_AIProviderType.OPENAI,
@@ -52,3 +55,10 @@ export const isChatCapableProviderType = (type: InstanceSetting_AIProviderType):
 /** Whether audio transcription is implemented for this provider type. */
 export const isTranscriptionCapableProviderType = (type: InstanceSetting_AIProviderType): boolean =>
   TRANSCRIPTION_CAPABLE_PROVIDER_TYPES.includes(type);
+
+/** Whether changing a provider type would keep its current transcription use valid. */
+export const isProviderTypeChangeCompatibleWithTranscription = (
+  providerId: string,
+  nextType: InstanceSetting_AIProviderType,
+  transcriptionProviderId: string,
+): boolean => providerId !== transcriptionProviderId || isTranscriptionCapableProviderType(nextType);

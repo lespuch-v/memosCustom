@@ -9,7 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useAiContext } from "@/contexts/AiContext";
 import { useInstance } from "@/contexts/InstanceContext";
 import { useAiChat } from "@/hooks/useAiChat";
-import { isChatCapableProviderType } from "@/lib/ai-providers";
+import { DEFAULT_CHAT_MODEL, isChatCapableProviderType } from "@/lib/ai-providers";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/router/routes";
 import { InstanceSetting_Key } from "@/types/proto/api/v1/instance_service_pb";
@@ -37,7 +37,7 @@ const AIHub = () => {
 
   const chatConfig = aiSetting.chat;
   const providerId = chatConfig?.providerId ?? "";
-  const model = chatConfig?.model ?? "";
+  const model = chatConfig?.model || (providerId ? DEFAULT_CHAT_MODEL : "");
 
   // Chat needs both a chat-capable provider and a model, so the page can explain
   // exactly what is missing instead of failing on send.

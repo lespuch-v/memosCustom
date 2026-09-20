@@ -51,6 +51,12 @@ const mount = () => {
 };
 
 describe("MemoEditor paste", () => {
+  it("uses the same rounded surface as memo cards", () => {
+    const { container } = mount();
+
+    expect(container.querySelector(".group.relative")).toHaveClass("rounded-xl");
+  });
+
   it("attaches pasted files instead of writing images into the text", async () => {
     const upload = vi.spyOn(uploadService, "uploadFile");
     const { content, container } = mount();

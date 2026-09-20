@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,13 +24,23 @@ func TestAnalyzeMemoSemantic(t *testing.T) {
 		require.ErrorContains(t, err, "user not authenticated")
 	})
 
-	t.Run("sends one memo and nine fixed noul questions", func(t *testing.T) {
+	t.Run("sends the memo and its readable comment thread to nine fixed noul questions", func(t *testing.T) {
 		ts := NewTestService(t)
 		defer ts.Cleanup()
 		user, err := ts.CreateRegularUser(ctx, "semantic-user")
 		require.NoError(t, err)
 		userCtx := ts.CreateUserContext(ctx, user.ID)
 		memo, err := ts.Service.CreateMemo(userCtx, &v1pb.CreateMemoRequest{Memo: &v1pb.Memo{Content: "# Build the semantic inspector"}})
+		require.NoError(t, err)
+		comment, err := ts.Service.CreateMemoComment(userCtx, &v1pb.CreateMemoCommentRequest{
+			Name:    memo.Name,
+			Comment: &v1pb.Memo{Content: "The first implementation is ready.", Visibility: v1pb.Visibility_PRIVATE},
+		})
+		require.NoError(t, err)
+		_, err = ts.Service.CreateMemoComment(userCtx, &v1pb.CreateMemoCommentRequest{
+			Name:    comment.Name,
+			Comment: &v1pb.Memo{Content: "Next, verify the navigation edge case.", Visibility: v1pb.Visibility_PRIVATE},
+		})
 		require.NoError(t, err)
 
 		called := false
@@ -46,7 +57,10 @@ func TestAnalyzeMemoSemantic(t *testing.T) {
 			}
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
 			require.Equal(t, "~typesafe/jev-latest", body.Model)
-			require.Equal(t, memo.Content, body.State)
+			require.Contains(t, body.State, memo.Content)
+			require.Contains(t, body.State, "The first implementation is ready.")
+			require.Contains(t, body.State, "Next, verify the navigation edge case.")
+			require.Less(t, strings.Index(body.State, "The first implementation is ready."), strings.Index(body.State, "Next, verify the navigation edge case."))
 			require.Len(t, body.Questions, 9)
 			require.Equal(t, "Does this memo pose an open question or unsolved problem seeking an answer?", body.Questions["is_question"].Instructions)
 			require.Equal(t, "Does this memo imply at least one concrete action that its reader could take?", body.Questions["is_actionable"].Instructions)

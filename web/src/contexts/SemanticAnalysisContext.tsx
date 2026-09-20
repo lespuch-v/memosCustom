@@ -1,5 +1,6 @@
 import type { ReactNode, RefObject } from "react";
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { aiServiceClient } from "@/connect";
 import { useInstance } from "@/contexts/InstanceContext";
 import { handleError } from "@/lib/error";
@@ -29,6 +30,7 @@ const revisionKey = (memo: Memo) => `${memo.name}:${memo.updateTime?.seconds ?? 
 
 export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) => {
   const { aiSetting } = useInstance();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [memo, setMemo] = useState<Memo>();
   const [result, setResult] = useState<AnalyzeMemoSemanticResponse>();
@@ -38,6 +40,7 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
   const requestRef = useRef(0);
   const triggerRef = useRef<HTMLElement | null>(null);
   const anchorRef = useRef<HTMLElement | null>(null);
+  const locationKeyRef = useRef(location.key);
 
   const analyze = useCallback(async (target: Memo, bypassCache = false) => {
     const request = ++requestRef.current;
@@ -84,6 +87,14 @@ export const SemanticAnalysisProvider = ({ children }: { children: ReactNode }) 
     setOpen(false);
     window.setTimeout(() => triggerRef.current?.focus(), 0);
   }, []);
+
+  // The inspector is anchored to a memo card, so it must not survive a route
+  // change that unmounts that card and leaves the anchor ref detached.
+  useEffect(() => {
+    if (locationKeyRef.current === location.key) return;
+    locationKeyRef.current = location.key;
+    close();
+  }, [close, location.key]);
 
   const syncMemo = useCallback(
     (updated: Memo) => {

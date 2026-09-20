@@ -26,6 +26,8 @@ const (
 	maxChatMessageLength = 100_000
 	// maxChatModelLength bounds the requested model identifier.
 	maxChatModelLength = 256
+	// defaultChatModel is used when a chat-capable provider has no saved model.
+	defaultChatModel = "z-ai/glm-5.3-flash"
 	// providerModelsCacheTTL is how long a provider's model catalog is reused.
 	// Catalogs change on the order of weeks, and each miss costs a provider call.
 	providerModelsCacheTTL = 10 * time.Minute
@@ -265,7 +267,7 @@ func (s *APIV1Service) resolveChatTarget(ctx context.Context) (ai.ProviderConfig
 
 	model := strings.TrimSpace(chatConfig.GetModel())
 	if model == "" {
-		return ai.ProviderConfig{}, nil, status.Error(codes.FailedPrecondition, "chat model is not configured")
+		model = defaultChatModel
 	}
 	if len(model) > maxChatModelLength {
 		return ai.ProviderConfig{}, nil, status.Errorf(codes.InvalidArgument, "model is too long; maximum length is %d characters", maxChatModelLength)

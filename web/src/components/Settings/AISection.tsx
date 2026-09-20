@@ -17,9 +17,11 @@ import { useInstance } from "@/contexts/InstanceContext";
 import {
   AI_PROVIDER_TYPE_OPTIONS,
   DEFAULT_CHAT_CONTEXT_BUDGET_TOKENS,
+  DEFAULT_CHAT_MODEL,
   getDefaultEndpointPlaceholder,
   getProviderTypeLabel,
   isChatCapableProviderType,
+  isProviderTypeChangeCompatibleWithTranscription,
   isTranscriptionCapableProviderType,
 } from "@/lib/ai-providers";
 import { handleError } from "@/lib/error";
@@ -97,7 +99,7 @@ const toLocalTranscription = (config: InstanceSetting_TranscriptionConfig | unde
 
 const toLocalChat = (config: InstanceSetting_ChatConfig | undefined): LocalChat => ({
   providerId: config?.providerId ?? "",
-  model: config?.model ?? "",
+  model: config?.model || (config?.providerId ? DEFAULT_CHAT_MODEL : ""),
   contextBudgetTokens: config?.contextBudgetTokens ? String(config.contextBudgetTokens) : "",
   maxCompletionTokens: config?.maxCompletionTokens ? String(config.maxCompletionTokens) : "",
 });
@@ -142,7 +144,7 @@ const toTranscriptionConfig = (transcription: LocalTranscription) =>
 const toChatConfig = (chat: LocalChat) =>
   create(InstanceSetting_ChatConfigSchema, {
     providerId: chat.providerId,
-    model: chat.model.trim(),
+    model: chat.model.trim() || (chat.providerId ? DEFAULT_CHAT_MODEL : ""),
     contextBudgetTokens: parseTokenCount(chat.contextBudgetTokens),
     maxCompletionTokens: parseTokenCount(chat.maxCompletionTokens),
   });
@@ -266,6 +268,11 @@ const AISection = () => {
     }
 
     const normalizedProvider = { ...provider, title, endpoint };
+    if (!isProviderTypeChangeCompatibleWithTranscription(normalizedProvider.id, normalizedProvider.type, transcription.providerId)) {
+      toast.error(t("setting.ai.transcription-provider-type-incompatible"));
+      return;
+    }
+
     const exists = providers.some((item) => item.id === normalizedProvider.id);
     const nextProviders = exists
       ? providers.map((item) => (item.id === normalizedProvider.id ? normalizedProvider : item))

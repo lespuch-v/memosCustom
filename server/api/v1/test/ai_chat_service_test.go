@@ -344,7 +344,7 @@ func TestChatEnforcesStoredTokenBudgets(t *testing.T) {
 	require.Empty(t, *requests, "request limits must not override administrator limits")
 }
 
-func TestChatRequiresConfiguredModel(t *testing.T) {
+func TestChatUsesDefaultModelWhenNoneIsConfigured(t *testing.T) {
 	ctx := context.Background()
 	ts := NewTestService(t)
 	defer ts.Cleanup()
@@ -353,7 +353,7 @@ func TestChatRequiresConfiguredModel(t *testing.T) {
 	require.NoError(t, err)
 	userCtx := ts.CreateUserContext(ctx, user.ID)
 
-	server, _ := chatProviderServer(t, "ok")
+	server, requests := chatProviderServer(t, "ok")
 	configureChatProvider(t, ts, server.URL, &storepb.ChatConfig{ProviderId: "router-main"})
 
 	_, err = ts.Service.Chat(userCtx, &v1pb.ChatRequest{
@@ -362,8 +362,9 @@ func TestChatRequiresConfiguredModel(t *testing.T) {
 			Content: "hi",
 		}},
 	})
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "chat model is not configured")
+	require.NoError(t, err)
+	require.Len(t, *requests, 1)
+	require.Equal(t, "z-ai/glm-5.3-flash", (*requests)[0]["model"])
 }
 
 func TestChatValidatesMessages(t *testing.T) {
